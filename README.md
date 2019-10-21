@@ -1,0 +1,1 @@
+# object-centric-adversarial-text-to-image-synthesis
