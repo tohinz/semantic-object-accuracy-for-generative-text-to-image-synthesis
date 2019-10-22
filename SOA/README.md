@@ -66,8 +66,11 @@ for caption in caption_subset:
 ## Calculating IoU Scores
 For the IoU scores it is important that you use the same label mappings as we. Our labels are the following (also found in ``data/coco.names``) as per standard:
 0       person
+
 1       bicycle
+
 2       car
+
 3       motorbike
 4       aeroplane
 5       bus
