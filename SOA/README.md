@@ -71,6 +71,8 @@ We expect the information about the bounding boxes as a pickle file which is a d
 ```python
 output_dict = {"name_of_the_generated_image": [[], [label_int], [bbox]],
                ...}
+# for example:
+output_dict = {"my_generated_image": [[], [1, 1], [[0.1, 0.1, 0.3, 0.5], [0.6, 0.2, 0.2, 0.4]]]}
 ```
 Here, ``label_int`` is a list of the integer labels you use as conditioning (e.g. ``person=0, bicycle=1, ...``) and ``bbox`` 
 is a list of the bounding boxes ``[x, y, width, height]`` where the values are normalized to be between ``[0,1]`` and the coordinate system starts at the top left corner of the image, i.e. a bounding box of ``[0, 0, 0.5, 0.5]`` covers the top left quarter of the image.
@@ -97,7 +99,7 @@ for caption in captions:
         # bbox is a list with the corresponding bounding boxes [x, y, width, height]
         # e.g. label_int = [1, 1]
         #      bbox = [[0.1, 0.1, 0.3, 0.5], [0.6, 0.2, 0.2, 0.4]]
-        output_dict["my_generated_image_{}.png".format(idx)] = [[], [label_int], [bbox]]
+        output_dict["my_generated_image_{}.png".format(idx)] = [[], label_int, bbox]
         
 with open("images/label_01_bicycle/ground_truth_label_01_bicycle.pkl", "wb") as f:
     pickle.dump(output_dict, f)
