@@ -163,23 +163,28 @@ def calc_recall(predicted_bbox, label):
                 correctly_recognized += 1
                 break
     if num_images_total == 0:
-        return -1, -1, -1
+        return 0, 0, 0
     accuracy = float(correctly_recognized) / num_images_total
     return accuracy, correctly_recognized, num_images_total
 
 
 def calc_iou(predicted_bbox, gt_bbox, label):
-    """Calculate max IoU between correctly detected objects and provided ground gtruth"""
+    """Calculate max IoU between correctly detected objects and provided ground truth"""
     ious = []
 
+    # iterate over the predictions for all images
     for key in predicted_bbox.keys():
         predicted_bboxes = []
+        # get predictions for the image
         predictions = predicted_bbox[key]
+        # check if it recognized an object of the given label and if yes get its predicted bounding box
+        # for all detected objects of the given label
         for recognized_label, pred_bbox in zip(predictions[1], predictions[2]):
             if recognized_label == label:
                 predicted_bboxes.append(pred_bbox)
 
         gt_bboxes = []
+        # get the ground truth information of the current image
         gts = gt_bbox[key]
         if gts[1] is None:
             continue
@@ -194,11 +199,14 @@ def calc_iou(predicted_bbox, gt_bbox, label):
                 if real_label == label:
                     gt_bboxes.append(real_bbox)
 
+        # calculate all IoUs between ground truth bounding boxes of the given label
+        # and predicted bounding boxes of the given label
         all_current_ious = []
         for current_predicted_bbox in predicted_bboxes:
             for current_gt_bbox in gt_bboxes:
                 current_iou = get_iou(current_predicted_bbox, current_gt_bbox)
                 all_current_ious.append(current_iou)
+        # choose the maximum value as the IoU for this image
         if len(all_current_ious) > 0:
             ious.append(max(all_current_ious))
     if len(ious) == 0:
@@ -363,7 +371,7 @@ if __name__ == '__main__':
 
     # use YOLOv3 on all images
     print("Using YOLOv3 Network on Generated Images...")
-    run_yolo(args)
+    # run_yolo(args)
 
     # calculate score
     print("Calculating SOA Score...")
