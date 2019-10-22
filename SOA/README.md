@@ -67,13 +67,6 @@ for caption in caption_subset:
 For the IoU scores it is important that you use the same label mappings as we (we use the standard mapping). Our labels can be found in ``data/coco.names`` where each label is mapped to the line it is on, i.e. ``person=0, bicycle=1, ...``
 
 
-class labels -> make sure they're right
-
-
-
-how to load and process a caption file
-
-
 
 instructions about calculating iou values
 
