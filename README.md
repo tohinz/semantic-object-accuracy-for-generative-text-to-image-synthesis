@@ -16,6 +16,7 @@ How to calculate the SOA scores for a model:
         * ```python
             [{'image_id': XX, 'id': XX, 'idx': [XX, XX], 'caption': u'XX'}, ...]
           ```
+        * where ``'idx': [XX, XX]`` gives the indices for the validation captions in the commonly used captions file from [AttnGAN](https://github.com/taoxugit/AttnGAN)
 2. Use your model to generate images from the specified captions
 
     1. each caption file contains the relevant captions for the given label
