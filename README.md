@@ -23,9 +23,9 @@ How to calculate the SOA scores for a model:
     3. use each caption file to generate images for each caption and save the images in a folder within the previously created empty folder, i.e. for each of the labels (0-79) there should be a new folder in the previously created folder and the folder structure should look like this
         * images
             * label_00 -> folder contains images generated from captions for label 0
-            * label_01 -> folder contains images generated from captions for label 0
+            * label_01 -> folder contains images generated from captions for label 1
             * ...
-            * label_79 -> folder contains images generated from captions for label 0
+            * label_79 -> folder contains images generated from captions for label 79
     4. each new folder (that contains generated images) should contain the string "label_XX" somewhere in its name (make sure that integers are formated to two digits, e.g. "0", "02", ...) -> ideally give the folders the same name as the label files
     5. generate **three images for each caption** in each file
         * exception: for label "00" (person) randomly sample 30,000 captions and generate one image each for a total of 30,000 images
