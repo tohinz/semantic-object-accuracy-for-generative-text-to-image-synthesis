@@ -33,15 +33,11 @@ How to calculate the SOA scores for a model:
     6. in the end you should have 80 folders in the folder created in the step (2.ii), each folder should have the string "label_XX" in it for identification, and each folder should contain the generated images for this label
 
 3. Once you have generated images for each label you can calculate the SOA scores:
-    1. TODO Install requirements from SOA/requirements.txt (we use Python 3.5.2)
-    2. TODO download the YOLO weights file and save it as ``SOA/yolov3.weights``
-    3. run ``python calculate_soa.py --images path/to/folder/created-in-first-step --output path/to/folder/where-results-are-saved --gpu 0``
+    1. Install requirements from ``SOA/requirements.txt`` (we use Python 3.5.2)
+    2. TODO download the YOLOv3 weights file and save it as ``SOA/yolov3.weights``
+    3. run ``python calculate_soa.py --images path/to/folder/created-in-step-2ii --output path/to/folder/where-results-are-saved --gpu 0``
 
-4. TODO If you also want to calculate IoU values:
-    1. TODO save dicts
-    2. TODO make sure you use the same labeling as we do
-    3. run ``python calculate_soa.py --images path/to/folder/created-in-first-step --output path/to/folder/where-results-are-saved --gpu 0 --iou``
-
+4. If you also want to calculate IoU values check the detailed instructions [here](SOA/README.md)
 5. Calculating the SOA scores takes about 30-45 minutes (tested with a NVIDIA GTX 1080TI) depending on your hardware (not including the time it takes to generate the images)
-6. More detailed information [here](SOA/README.md)
+6. More detailed information (if needed) [here](SOA/README.md)
 
