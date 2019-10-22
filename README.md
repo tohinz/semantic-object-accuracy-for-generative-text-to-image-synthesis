@@ -32,7 +32,7 @@ How to calculate the SOA scores for a model:
     6. in the end you should have 80 folders in the folder created in the step (2.ii), each folder should have the string "label_XX" in it for identification, and each folder should contain the generated images for this label
 
 3. Once you have generated images for each label you can calculate the SOA scores:
-    1. TODO install requirements from SOA/requirements.txt
+    1. TODO Install requirements from SOA/requirements.txt (we use Python 3.5.2)
     2. TODO download the YOLO weights file and save it as ``SOA/yolov3.weights``
     3. run ``python calculate_soa.py --images path/to/folder/created-in-first-step --output path/to/folder/where-results-are-saved --gpu 0``
 
