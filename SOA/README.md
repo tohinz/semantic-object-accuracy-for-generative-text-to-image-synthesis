@@ -60,7 +60,7 @@ caption_subset = random.sample(captions, 30000)
 for caption in caption_subset:
     current_caption = caption["caption"]
     my_generated_image = my_model(current_caption)
-    save("images/label_01_bicycle/my_generated_image.png)    
+    save("images/label_00_person/my_generated_image.png)    
 ```
 
 
