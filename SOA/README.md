@@ -44,6 +44,25 @@ for caption in captions:
         ...
 ```
 
+For the file ``label_00_person.pkl`` we randomly sample 30,000 captions and generate one image each:
+```python
+import pickle
+import random
+import my_model
+
+# load the caption file
+with open(label_00_person.pkl, "rb") as f:
+    captions = pickle.load(f)
+
+caption_subset = random.sample(captions, 30000)
+
+# iterate over the captions and generate three images each
+for caption in caption_subset:
+    current_caption = caption["caption"]
+    my_generated_image = my_model(current_caption)
+    save("images/label_01_bicycle/my_generated_image.png)    
+```
+
 
 class labels -> make sure they're right
 
