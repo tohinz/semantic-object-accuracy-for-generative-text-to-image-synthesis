@@ -28,7 +28,8 @@ How to calculate the SOA scores for a model:
 
 4. TODO If you also want to calculate IoU values:
     1. TODO save dicts
-    2. run ``python calculate_soa.py --images path/to/folder/created-in-first-step --output path/to/folder/where-results-are-saved --gpu 0 --iou``
+    2. TODO make sure you use the same labeling as we do
+    3. run ``python calculate_soa.py --images path/to/folder/created-in-first-step --output path/to/folder/where-results-are-saved --gpu 0 --iou``
 
 5. Calculating the SOA scores takes about 30-45 minutes (tested with a NVIDIA GTX 1080TI) depending on your hardware (not including the time it takes to generate the images)
 6. More detailed information [here](SOA/README.md)
