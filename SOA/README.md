@@ -1,4 +1,4 @@
-# Details for calculating the SOA Scores (Semantic Object Accuracy)
+# Details for calculating the SOA Scores
 
 ## Work with the caption files
 To load the captions: load a caption file, get the captions, and generate images:
@@ -15,7 +15,7 @@ for caption in captions:
     current_caption = caption["caption"]
     for idx in range(3):
         my_generated_image = my_model(current_caption)
-        save("images/label_01_bicycle/my_generated_image.png)    
+        save("images/label_01_bicycle/my_generated_image_{}.png".format(idx))  
 ```
 
 Alternatively, if you're working with the ``captions.pickle`` file from the [AttnGAN](https://github.com/taoxugit/AttnGAN) and their dataloader you can use the provided ``idx`` to load the file directly from the file:
@@ -66,6 +66,37 @@ for caption in caption_subset:
 ## Calculating IoU Scores
 For the IoU scores it is important that you use the same label mappings as we (we use the standard mapping). Our labels can be found in ``data/coco.names`` where each label is mapped to the line it is on, i.e. ``person=0, bicycle=1, ...``
 
+In order to calculate the IoU scores you need to save the "ground truth" information, i.e. the bounding boxes you give your model as input, so we can compare them with the bounding boxes from the detection network.
+We expect the information about the bounding boxes as a pickle file which is a dictionary of the form
+```python
+dict = {}
+```
+
+
+```python
+import pickle
+import my_model
+
+# load the caption file
+with open(label_01_bicycle.pkl, "rb") as f:
+    captions = pickle.load(f)
+
+# this is the dictionary we use to save the bounding boxes
+output_dict = {}
+
+# iterate over the captions and generate three images each
+for caption in captions:
+    current_caption = caption["caption"]
+    for idx in range(3):
+        my_generated_image = my_model(current_caption)
+        save("images/label_01_bicycle/my_generated_image_{}.png".format(idx))    
+        # label_int is a list of the integer values for labels you used as input to the network
+        # bbox is a list with the corresponding bounding boxes [x, y, width, height]
+        # e.g. label_int = [1, 1]
+        #      bbox = [[0.1, 0.1, 0.3, 0.5], [0.6, 0.2, 0.2, 0.4]]
+        output_dict["my_generated_image_{}".format(idx)] = [[], [label_int], [bbox]]
+        
+```
 
 
 instructions about calculating iou values
