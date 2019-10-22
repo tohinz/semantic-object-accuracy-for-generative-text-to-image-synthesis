@@ -97,13 +97,11 @@ for caption in captions:
         # bbox is a list with the corresponding bounding boxes [x, y, width, height]
         # e.g. label_int = [1, 1]
         #      bbox = [[0.1, 0.1, 0.3, 0.5], [0.6, 0.2, 0.2, 0.4]]
-        output_dict["my_generated_image_{}".format(idx)] = [[], [label_int], [bbox]]
+        output_dict["my_generated_image_{}.png".format(idx)] = [[], [label_int], [bbox]]
         
 with open("images/label_01_bicycle/ground_truth_label_01_bicycle.pkl", "wb") as f:
     pickle.dump(output_dict, f)
 ```
 
-
-instructions about calculating iou values
-
-    3. run ``python calculate_soa.py --images path/to/folder/created-in-first-step --output path/to/folder/where-results-are-saved --gpu 0 --iou``
+Finally, you should have the 80 folders with images as before, but now each folder should also contain a ``.pkl`` file with the ground truth information of the given layout.
+Run the same command as before but with the ``--iou`` flag: ``python calculate_soa.py --images path/to/folder/created-in-first-step --output path/to/folder/where-results-are-saved --gpu 0 --iou``
