@@ -16,10 +16,10 @@ How to calculate the SOA scores for a model:
                * label_01 -> folder contains images generated from captions for label 0
                * ...
                * label_79 -> folder contains images generated from captions for label 0
-    4. each new folder (that contains generated images) should contain the string "label_XX" somewhere in its name (make sure that integers are formated to two digits, e.g. "0", "02", ...) -> ideally give the folders the same name as the label files
-    5. generate **three images for each caption** in each file
+       4. each new folder (that contains generated images) should contain the string "label_XX" somewhere in its name (make sure that integers are formated to two digits, e.g. "0", "02", ...) -> ideally give the folders the same name as the label files
+       5. generate **three images for each caption** in each file
        * exception: for label "00" (person) randomly sample 30,000 captions and generate one image each for a total of 30,000 images
-    6. in the end you should have 80 folders in the folder created in the step (2.2), each folder should have the string "label_XX" in it for identification, and each folder should contain the generated images for this label
+       6. in the end you should have 80 folders in the folder created in the step (2.2), each folder should have the string "label_XX" in it for identification, and each folder should contain the generated images for this label
 
 
 
