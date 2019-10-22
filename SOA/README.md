@@ -26,8 +26,7 @@ import my_model
 # load the AttnGAN captions file
 with open(captions.pickle, "rb") as f:
     attngan_captions = pickle.load(f)
-train_captions, test_captions = attngan_captions[0], attngan_captions[1]
-ixtoword, wordtoix = attngan_captions[2], attngan_captions[3]
+test_captions = attngan_captions[1]
 
 # load the caption file
 with open(label_01_bicycle.pkl, "rb") as f:
