@@ -36,7 +36,6 @@ def arg_parse():
                         help="Input resolution of the network. Increase to increase accuracy. Decrease to increase speed")
     parser.add_argument("--image_size", dest='image_size', help="Size of evaluated images", default=256, type=int)
     parser.add_argument('--iou', dest='iou', action='store_true')
-
     parser.add_argument('--gpu', dest='gpu', type=str, default="0")
 
     return parser.parse_args()
@@ -88,6 +87,11 @@ def run_yolo(args):
             shutil.copyfile(os.path.join(full_dir, ground_truth_file[0]),
                             os.path.join(args.output, "ground_truth_{}.pkl".format(dir)))
 
+        # check if detection was already run for this label
+        if os.path.isfile(os.path.join(args.output, "detected_{}.pkl".format(dir))):
+            print("Detection already run for {}. Continuing with next label.".format(dir))
+            continue
+
         # create dataset
         image_transform = transforms.Compose([
             transforms.Resize((img_size, img_size)),
@@ -138,6 +142,7 @@ def run_yolo(args):
 
 
 def calc_recall(predicted_bbox, label):
+    """Calculate how often a given object (label) was detected in the images"""
     correctly_recognized = 0
     num_images_total = len(predicted_bbox.keys())
     for key in predicted_bbox.keys():
@@ -153,6 +158,7 @@ def calc_recall(predicted_bbox, label):
 
 
 def calc_iou(predicted_bbox, gt_bbox, label):
+    """Calculate max IoU between correctly detected objects and provided ground gtruth"""
     ious = []
 
     for key in predicted_bbox.keys():
@@ -190,12 +196,103 @@ def calc_iou(predicted_bbox, gt_bbox, label):
     return avg_iou
 
 
+def calc_overall_class_average_accuracy(dict):
+    """Calculate SOA-C"""
+    accuracy = 0
+    for label in dict.keys():
+        accuracy += dict[label]["accuracy"]
+    overall_accuracy = accuracy / len(dict.keys())
+    return overall_accuracy
+
+
+def calc_image_weighted_average_accuracy(dict):
+    """Calculate SOA-I"""
+    accuracy = 0
+    total_images = 0
+    for label in dict.keys():
+        num_images = dict[label]["images_total"]
+        accuracy += num_images * dict[label]["accuracy"]
+        total_images += num_images
+    overall_accuracy = accuracy / total_images
+    return overall_accuracy
+
+
+def calc_split_class_average_accuracy(dict):
+    """Calculate SOA-C-Top/Bot-40"""
+    num_img_list = []
+    for label in dict.keys():
+        num_img_list.append([label, dict[label]["images_total"]])
+    num_img_list.sort(key=lambda x: x[1])
+    sorted_label_list = [x[0] for x in num_img_list]
+
+    bottom_40_accuracy = 0
+    top_40_accuracy = 0
+    for label in dict.keys():
+        if sorted_label_list.index(label) < 40:
+            bottom_40_accuracy += dict[label]["accuracy"]
+        else:
+            top_40_accuracy += dict[label]["accuracy"]
+    bottom_40_accuracy /= 0.5*len(dict.keys())
+    top_40_accuracy /= 0.5*len(dict.keys())
+
+    return top_40_accuracy, bottom_40_accuracy
+
+
+def calc_overall_class_average_iou(dict):
+    """Calculate SOA-C-IoU"""
+    iou = 0
+    for label in dict.keys():
+        if dict[label]["iou"] is not None and dict[label]["iou"] >= 0:
+            iou += dict[label]["iou"]
+    overall_iou = iou / len(dict.keys())
+    return overall_iou
+
+
+def calc_image_weighted_average_iou(dict):
+    """Calculate SOA-I-IoU"""
+    iou = 0
+    total_images = 0
+    for label in dict.keys():
+        num_images = dict[label]["images_total"]
+        if dict[label]["iou"] is not None and dict[label]["iou"] >= 0:
+            iou += num_images * dict[label]["iou"]
+        total_images += num_images
+    overall_iou = iou / total_images
+    return overall_iou
+
+
+def calc_split_class_average_iou(dict):
+    """Calculate SOA-C-IoU-Top/Bot-40"""
+    num_img_list = []
+    for label in dict.keys():
+        num_img_list.append([label, dict[label]["images_total"]])
+    num_img_list.sort(key=lambda x: x[1])
+    sorted_label_list = [x[0] for x in num_img_list]
+
+    bottom_40_iou = 0
+    top_40_iou = 0
+    for label in dict.keys():
+        if sorted_label_list.index(label) < 40:
+            if dict[label]["iou"] is not None and dict[label]["iou"] >= 0:
+                bottom_40_iou += dict[label]["iou"]
+        else:
+            if dict[label]["iou"] is not None and dict[label]["iou"] >= 0:
+                top_40_iou += dict[label]["iou"]
+    bottom_40_iou /= 0.5*len(dict.keys())
+    top_40_iou /= 0.5*len(dict.keys())
+
+    return top_40_iou, bottom_40_iou
+
+
 def calc_soa(args):
+    """Calculate SOA scores"""
     results_dict = {}
-    # find yolo results
-    yolo_detected_files = [_file for _file in os.listdir(args.output)
+
+    # find detection results
+    yolo_detected_files = [os.path.join(args.output, _file) for _file in os.listdir(args.output)
                            if _file.endswith(".pkl") and _file.startswith("detected_")]
 
+    # go through yolo detection and check how often it detected the desired object (based on the label)
     for yolo_file in yolo_detected_files:
         yolo = load_file(yolo_file)
         label = get_label(yolo_file)
@@ -206,8 +303,21 @@ def calc_soa(args):
         results_dict[label]["images_recognized"] = correctly_recog
         results_dict[label]["images_total"] = num_imgs_total
 
+    # calculate SOA-C and SOA-I
+    print("")
+    class_average_acc = calc_overall_class_average_accuracy(results_dict)
+    print("Class average accuracy for all classes (SOA-C) is: {:6.4f}".format(class_average_acc))
+
+    image_average_acc = calc_image_weighted_average_accuracy(results_dict)
+    print("Image weighted average accuracy (SOA-I) is: {:6.4f}".format(image_average_acc))
+
+    top_40_class_average_acc, bottom_40_class_average_acc = calc_split_class_average_accuracy(results_dict)
+    print("Top (SOA-C-Top40) and Bottom (SOA-C-Bot40) 40 class average accuracy is: {:6.4f} and {:6.4f}".
+          format(top_40_class_average_acc, bottom_40_class_average_acc))
+
+    # if IoU is true calculate the IoU scores, too
     if args.iou:
-        ground_truth_files = [_file for _file in os.listdir(args.output)
+        ground_truth_files = [os.path.join(args.output, _file) for _file in os.listdir(args.output)
                               if _file.endswith(".pkl") and _file.startswith("ground_truth_")]
 
         yolo_detected_files = sorted(yolo_detected_files)
@@ -221,18 +331,30 @@ def calc_soa(args):
 
             results_dict[label]["iou"] = iou
 
-    # calculate SOA-C and SOA-I
-    with open(os.path.join(args.output, "result_file.pkl")) as f:
-        pkl.dump(results_dict, f)
+        print("")
+        class_average_iou = calc_overall_class_average_iou(results_dict)
+        print("Class average IoU for all classes (SOA-C-IoU) is: {:6.4f}".format(class_average_iou))
 
+        image_average_iou = calc_image_weighted_average_iou(results_dict)
+        print("Image weighted average IoU (SOA-I-IoU) is: {:6.4f}".format(image_average_iou))
+
+        top_40_class_average_iou, bottom_40_class_average_iou = calc_split_class_average_iou(results_dict)
+        print("Top (SOA-C-Top40-IoU) and Bottom (SOA-C-Bot40-IoU) 40 class average IoU is: {:6.4f} and {:6.4f}".
+              format(top_40_class_average_iou, bottom_40_class_average_iou))
+
+    # store results
+    with open(os.path.join(args.output, "result_file.pkl"), "wb") as f:
+        pkl.dump(results_dict, f)
 
 
 if __name__ == '__main__':
     args = arg_parse()
 
     # use YOLOv3 on all images
+    print("Using YOLOv3 Network on Generated Images...")
     run_yolo(args)
 
     # calculate score
+    print("Calculating SOA Score...")
     calc_soa(args)
 

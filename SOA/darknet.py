@@ -5,33 +5,9 @@ import torch.nn as nn
 import torch.nn.functional as F 
 from torch.autograd import Variable
 import numpy as np
-import cv2 
-import matplotlib.pyplot as plt
-from util import count_parameters as count
-# from util import convert2cpu as cpu
-from util import predict_transform
+import pickle as pkl
 
-class test_net(nn.Module):
-    def __init__(self, num_layers, input_size):
-        super(test_net, self).__init__()
-        self.num_layers= num_layers
-        self.linear_1 = nn.Linear(input_size, 5)
-        self.middle = nn.ModuleList([nn.Linear(5,5) for x in range(num_layers)])
-        self.output = nn.Linear(5,2)
-    
-    def forward(self, x):
-        x = x.view(-1)
-        fwd = nn.Sequential(self.linear_1, *self.middle, self.output)
-        return fwd(x)
-        
-def get_test_input():
-    img = cv2.imread("dog-cycle-car.png")
-    img = cv2.resize(img, (416,416)) 
-    img_ =  img[:,:,::-1].transpose((2,0,1))
-    img_ = img_[np.newaxis,:,:,:]/255.0
-    img_ = torch.from_numpy(img_).float()
-    img_ = Variable(img_)
-    return img_
+from util import predict_transform
 
 
 def parse_cfg(cfgfile):
@@ -48,7 +24,6 @@ def parse_cfg(cfgfile):
     lines = [x for x in lines if x[0] != '#']  
     lines = [x.rstrip().lstrip() for x in lines]
 
-    
     block = {}
     blocks = []
     
@@ -64,9 +39,7 @@ def parse_cfg(cfgfile):
     blocks.append(block)
 
     return blocks
-#    print('\n\n'.join([repr(x) for x in blocks]))
 
-import pickle as pkl
 
 class MaxPoolStride1(nn.Module):
     def __init__(self, kernel_size):
@@ -143,7 +116,6 @@ def create_modules(blocks):
     
     index = 0    #indexing blocks helps with implementing route  layers (skip connections)
 
-    
     prev_filters = 3
     
     output_filters = []
@@ -189,9 +161,7 @@ def create_modules(blocks):
             if activation == "leaky":
                 activn = nn.LeakyReLU(0.1, inplace = True)
                 module.add_module("leaky_{0}".format(index), activn)
-            
-            
-            
+
         #If it's an upsampling layer
         #We use Bilinear2dUpsampling
         
@@ -213,9 +183,7 @@ def create_modules(blocks):
                 end = int(x["layers"][1])
             except:
                 end = 0
-                
-            
-            
+
             #Positive anotation
             if start > 0: 
                 start = start - index
@@ -223,26 +191,20 @@ def create_modules(blocks):
             if end > 0:
                 end = end - index
 
-            
             route = EmptyLayer()
             module.add_module("route_{0}".format(index), route)
-            
-            
-            
+
             if end < 0:
                 filters = output_filters[index + start] + output_filters[index + end]
             else:
                 filters= output_filters[index + start]
-                        
-            
-        
+
         #shortcut corresponds to skip connection
         elif x["type"] == "shortcut":
             from_ = int(x["from"])
             shortcut = EmptyLayer()
             module.add_module("shortcut_{}".format(index), shortcut)
-            
-            
+
         elif x["type"] == "maxpool":
             stride = int(x["stride"])
             size = int(x["size"])
@@ -257,8 +219,7 @@ def create_modules(blocks):
         elif x["type"] == "yolo":
             mask = x["mask"].split(",")
             mask = [int(x) for x in mask]
-            
-            
+
             anchors = x["anchors"].split(",")
             anchors = [int(a) for a in anchors]
             anchors = [(anchors[i], anchors[i+1]) for i in range(0, len(anchors),2)]
@@ -266,22 +227,16 @@ def create_modules(blocks):
             
             detection = DetectionLayer(anchors)
             module.add_module("Detection_{}".format(index), detection)
-        
-            
-            
         else:
             print("Something I dunno")
             assert False
-
 
         module_list.append(module)
         prev_filters = filters
         output_filters.append(filters)
         index += 1
-        
     
     return (net_info, module_list)
-
 
 
 class Darknet(nn.Module):
@@ -292,21 +247,17 @@ class Darknet(nn.Module):
         self.header = torch.IntTensor([0,0,0,0])
         self.seen = 0
 
-        
-        
     def get_blocks(self):
         return self.blocks
     
     def get_module_list(self):
         return self.module_list
 
-                
     def forward(self, x, CUDA):
         detections = []
         modules = self.blocks[1:]
         outputs = {}   #We cache the outputs for the route layer
-        
-        
+
         write = 0
         for i in range(len(modules)):        
             
@@ -316,7 +267,6 @@ class Darknet(nn.Module):
                 x = self.module_list[i](x)
                 outputs[i] = x
 
-                
             elif module_type == "route":
                 layers = modules[i]["layers"]
                 layers = [int(a) for a in layers]
@@ -333,18 +283,13 @@ class Darknet(nn.Module):
                         
                     map1 = outputs[i + layers[0]]
                     map2 = outputs[i + layers[1]]
-                    
-                    
+
                     x = torch.cat((map1, map2), 1)
                 outputs[i] = x
-            
             elif  module_type == "shortcut":
                 from_ = int(modules[i]["from"])
                 x = outputs[i-1] + outputs[i+from_]
                 outputs[i] = x
-                
-            
-            
             elif module_type == 'yolo':        
                 
                 anchors = self.module_list[i][0].anchors
@@ -361,7 +306,6 @@ class Darknet(nn.Module):
                 if type(x) == int:
                     continue
 
-                
                 if not write:
                     detections = x
                     write = 1
@@ -370,15 +314,12 @@ class Darknet(nn.Module):
                     detections = torch.cat((detections, x), 1)
                 
                 outputs[i] = outputs[i-1]
-                
-        
-        
+
         try:
             return detections
         except:
             return 0
 
-            
     def load_weights(self, weightfile):
         
         #Open the weights file
@@ -389,7 +330,7 @@ class Darknet(nn.Module):
         # 2. Minor Version Number
         # 3. Subversion number 
         # 4. IMages seen 
-        header = np.fromfile(fp, dtype = np.int32, count = 5)
+        header = np.fromfile(fp, dtype = np.int32, count=5)
         self.header = torch.from_numpy(header)
         self.seen = self.header[3]
         
@@ -465,51 +406,3 @@ class Darknet(nn.Module):
 
                 conv_weights = conv_weights.view_as(conv.weight.data)
                 conv.weight.data.copy_(conv_weights)
-                
-    # def save_weights(self, savedfile, cutoff = 0):
-    #
-    #     if cutoff <= 0:
-    #         cutoff = len(self.blocks) - 1
-    #
-    #     fp = open(savedfile, 'wb')
-    #
-    #     # Attach the header at the top of the file
-    #     self.header[3] = self.seen
-    #     header = self.header
-    #
-    #     header = header.numpy()
-    #     header.tofile(fp)
-    #
-    #     # Now, let us save the weights
-    #     for i in range(len(self.module_list)):
-    #         module_type = self.blocks[i+1]["type"]
-    #
-    #         if (module_type) == "convolutional":
-    #             model = self.module_list[i]
-    #             try:
-    #                 batch_normalize = int(self.blocks[i+1]["batch_normalize"])
-    #             except:
-    #                 batch_normalize = 0
-    #
-    #             conv = model[0]
-    #
-    #             if (batch_normalize):
-    #                 bn = model[1]
-    #
-    #                 #If the parameters are on GPU, convert them back to CPU
-    #                 #We don't convert the parameter to GPU
-    #                 #Instead. we copy the parameter and then convert it to CPU
-    #                 #This is done as weight are need to be saved during training
-    #                 cpu(bn.bias.data).numpy().tofile(fp)
-    #                 cpu(bn.weight.data).numpy().tofile(fp)
-    #                 cpu(bn.running_mean).numpy().tofile(fp)
-    #                 cpu(bn.running_var).numpy().tofile(fp)
-    #
-    #
-    #             else:
-    #                 cpu(conv.bias.data).numpy().tofile(fp)
-    #
-    #
-    #             #Let us save the weights for the Convolutional layers
-    #             cpu(conv.weight.data).numpy().tofile(fp)
-               

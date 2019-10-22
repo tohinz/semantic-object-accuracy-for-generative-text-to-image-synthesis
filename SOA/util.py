@@ -3,10 +3,7 @@ from __future__ import division
 import torch 
 import torch.nn as nn
 import numpy as np
-
-
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters())
+import pickle
 
 
 def load_classes(namesfile):
@@ -23,7 +20,10 @@ def load_file(path):
 
 def get_label(path):
     idx = path.find("label_")
-    label = int(path[idx+6:idx+8])
+    try:
+        label = int(path[idx+6:idx+8])
+    except:
+        label = int(path[idx + 6:idx + 7])
     return label
 
 
@@ -167,3 +167,79 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
             output[image_i] = torch.stack(keep_boxes)
 
     return output
+
+
+def get_iou(bb1, bb2):
+    """
+    Calculate the Intersection over Union (IoU) of two bounding boxes.
+
+    Parameters
+    ----------
+    bb1 : dict
+        Keys: {'x1', 'x2', 'y1', 'y2'}
+        The (x1, y1) position is at the top left corner,
+        the (x2, y2) position is at the bottom right corner
+    bb2 : dict
+        Keys: {'x1', 'x2', 'y1', 'y2'}
+        The (x, y) position is at the top left corner,
+        the (x2, y2) position is at the bottom right corner
+
+    Returns
+    -------
+    float
+        in [0, 1]
+    """
+    bb1_x1 = int(bb1[0]*256)
+    bb1_y1 = int(bb1[1]*256)
+    bb1_x2 = bb1_x1+int(bb1[2]*256)
+    bb1_y2 = bb1_y1+int(bb1[3]*256)
+
+    bb1_x1 = 0 if bb1_x1 < 0 else bb1_x1
+    bb1_y1 = 0 if bb1_y1 < 0 else bb1_y1
+    bb1_x2 = 0 if bb1_x2 < 0 else bb1_x2
+    bb1_y2 = 0 if bb1_y2 < 0 else bb1_y2
+
+
+    bb2_x1 = int(bb2[0]*256)
+    bb2_y1 = int(bb2[1]*256)
+    bb2_x2 = bb2_x1 + int(bb2[2]*256)
+    bb2_y2 = bb2_y1 + int(bb2[3]*256)
+
+    bb2_x1 = 0 if bb2_x1 < 0 else bb2_x1
+    bb2_y1 = 0 if bb2_y1 < 0 else bb2_y1
+    bb2_x2 = 0 if bb2_x2 < 0 else bb2_x2
+    bb2_y2 = 0 if bb2_y2 < 0 else bb2_y2
+
+    if not bb1_x1 < bb1_x2:
+        bb1_x2 = bb1_x1 + 1
+    if not bb1_y1 < bb1_y2:
+        bb1_y2 = bb1_y1 + 1
+    if not bb2_x1 < bb2_x2:
+        bb2_x2 = bb2_x1 +1
+    if not bb2_y1 < bb2_y2:
+        bb2_y2 = bb2_y1 + 1
+
+    # determine the coordinates of the intersection rectangle
+    x_left = max(bb1_x1, bb2_x1)
+    y_top = max(bb1_y1, bb2_y1)
+    x_right = min(bb1_x2, bb2_x2)
+    y_bottom = min(bb1_y2, bb2_y2)
+
+    if x_right < x_left or y_bottom < y_top:
+        return 0.0
+
+    # The intersection of two axis-aligned bounding boxes is always an
+    # axis-aligned bounding box
+    intersection_area = (x_right - x_left) * (y_bottom - y_top)
+
+    # compute the area of both AABBs
+    bb1_area = (bb1_x2 - bb1_x1) * (bb1_y2 - bb1_y1)
+    bb2_area = (bb2_x2 - bb2_x1) * (bb2_y2 - bb2_y1)
+
+    # compute the intersection over union by taking the intersection
+    # area and dividing it by the sum of prediction + ground-truth
+    # areas - the interesection area
+    iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
+    assert iou >= 0.0
+    assert iou <= 1.0
+    return iou
