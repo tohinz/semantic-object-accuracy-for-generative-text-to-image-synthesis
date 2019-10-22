@@ -74,6 +74,7 @@ output_dict = {"name_of_the_generated_image": [[], [label_int], [bbox]],
 ```
 Here, ``label_int`` is a list of the integer labels you use as conditioning (e.g. ``person=0, bicycle=1, ...``) and ``bbox`` 
 is a list of the bounding boxes ``[x, y, width, height]`` where the values are normalized to be between ``[0,1]`` and the coordinate system starts at the top left corner of the image, i.e. a bounding box of ``[0, 0, 0.5, 0.5]`` covers the top left quarter of the image.
+The ``output_dict`` should be saved in the same folder as the images for which it was created.
 
 ```python
 import pickle
