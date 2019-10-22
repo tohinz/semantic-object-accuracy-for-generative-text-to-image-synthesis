@@ -48,6 +48,20 @@ def run_yolo(args):
     nms_thresh = float(args.nms_thresh)
     img_size = args.image_size
 
+    # check that the given folder contains exactly 80 folders
+    _all_dirs = os.listdir(images)
+    _num_folders = 0
+    for _dir in _all_dirs:
+        if os.path.isdir(os.path.join(images, _dir)):
+            _num_folders += 1
+    if _num_folders != 80:
+        print("Did not find exactly 80 folders (only {} found) in {}.".format(_num_folders, images))
+        print("Please make sure the folder {} contains one subfolder for each of the labels.".format(images))
+        exit()
+
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
+
     CUDA = torch.cuda.is_available()
 
     classes = load_classes('data/coco.names')
@@ -73,9 +87,6 @@ def run_yolo(args):
     # Set the model in evaluation mode
     model.eval()
     print("saving to {}".format(args.output))
-
-    if not os.path.exists(args.output):
-        os.makedirs(args.output)
 
     # go through all folders of generated images
     for dir in tqdm(os.listdir(images)):
