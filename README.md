@@ -7,7 +7,8 @@ How to calculate the SOA scores for a model:
 1. The captions are in ``SOA/captions``
     1. each file is named ``label_XX_XX.pkl`` describing for which labels the captions in the file are
     2. load the file with pickle
-        * ```python import pickle 
+        * ```python
+             import pickle 
              with open(label_XX_XX.pkl, "rb") as f:
                  captions = pickle.load(f)
           ```
