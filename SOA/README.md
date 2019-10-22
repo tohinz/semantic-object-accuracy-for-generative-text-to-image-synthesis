@@ -96,11 +96,12 @@ for caption in captions:
         #      bbox = [[0.1, 0.1, 0.3, 0.5], [0.6, 0.2, 0.2, 0.4]]
         output_dict["my_generated_image_{}".format(idx)] = [[], [label_int], [bbox]]
         
+with open(""images/label_01_bicycle/ground_truth_label_01_bicycle.pkl", "wb") as f:
+    pickle.dump(output_dict, f)
+        
 ```
 
 
 instructions about calculating iou values
 
-    1. TODO save dicts
-    2. TODO make sure you use the same labeling as we do
     3. run ``python calculate_soa.py --images path/to/folder/created-in-first-step --output path/to/folder/where-results-are-saved --gpu 0 --iou``
