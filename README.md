@@ -13,14 +13,14 @@ How to calculate the SOA scores for a model:
                  captions = pickle.load(f)
           ```
     3. each file is a list and each entry in the list is a dictionary containing information about the caption:
-        * ```python {'image_id': XX, 'id': XX, 'idx': [XX, XX], 'caption': u'XX'}```
-    x. use your model to generate three images for each of the captions in the 80 files
-
+        * ```python
+            [{'image_id': XX, 'id': XX, 'idx': [XX, XX], 'caption': u'XX'}, ...]
+          ```
 2. Use your model to generate images from the specified captions
 
-    1. each caption file contains the relevant captions for the given label, see [here](SOA/README.md) for the exact details
+    1. each caption file contains the relevant captions for the given label
     2. create a new and empty folder 
-    3. use each caption file to generate images for each caption and save the in a folder within the previously created empty folder, i.e. for each of the labels (0-79) there should be a new folder in the previously created folder and the folder structure should look like this
+    3. use each caption file to generate images for each caption and save the images in a folder within the previously created empty folder, i.e. for each of the labels (0-79) there should be a new folder in the previously created folder and the folder structure should look like this
         * images
             * label_00 -> folder contains images generated from captions for label 0
             * label_01 -> folder contains images generated from captions for label 0
