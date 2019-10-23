@@ -55,9 +55,13 @@ def run_yolo(args):
         if os.path.isdir(os.path.join(images, _dir)):
             _num_folders += 1
     if _num_folders != 80:
-        print("Did not find exactly 80 folders (only {} found) in {}.".format(_num_folders, images))
-        print("Please make sure the folder {} contains one subfolder for each of the labels.".format(images))
-        exit()
+        print("")
+        print("****************************************************************************")
+        print("\tWARNING")
+        print("\tDid not find exactly 80 folders ({} folders found) in {}.".format(_num_folders, images))
+        print("\tFor the final calculation please make sure the folder {} contains one subfolder for each of the labels.".format(images))
+        print("\tCalculating scores on {}/80 labels now, but results will not be conclusive.".format(_num_folders))
+        print("****************************************************************************")
 
     if not os.path.exists(args.output):
         os.makedirs(args.output)
@@ -103,7 +107,7 @@ def run_yolo(args):
             print("Detection already run for {}. Continuing with next label.".format(dir))
             continue
 
-        # create dataset
+        # create dataset from images in the current folder
         image_transform = transforms.Compose([
             transforms.Resize((img_size, img_size)),
             transforms.ToTensor(),
@@ -117,6 +121,7 @@ def run_yolo(args):
         dataloader = iter(dataloader)
         output_dict = {}
 
+        # get YOLO predictions for images in current folder
         for idx in tqdm(range(num_batches)):
             data = dataloader.next()
             imgs, filenames = data
@@ -147,7 +152,6 @@ def run_yolo(args):
                                           bbox_width.cpu().numpy(), bbox_height.cpu().numpy()])
                 output_dict[img.split("/")[-1]] = [img_preds_name, img_preds_id, img_bboxs]
 
-        # print("saving to {}/{}".format(args.output, dir))
         with open(os.path.join(args.output, "detected_{}.pkl".format(dir)), "wb") as f:
             pkl.dump(output_dict, f)
 
@@ -169,7 +173,7 @@ def calc_recall(predicted_bbox, label):
 
 
 def calc_iou(predicted_bbox, gt_bbox, label):
-    """Calculate max IoU between correctly detected objects and provided ground truth"""
+    """Calculate max IoU between correctly detected objects and provided ground truths for each image"""
     ious = []
 
     # iterate over the predictions for all images
@@ -186,17 +190,19 @@ def calc_iou(predicted_bbox, gt_bbox, label):
         gt_bboxes = []
         # get the ground truth information of the current image
         gts = gt_bbox[key]
-        if gts[1] is None:
+
+        if gts[1] is None or len(gts[1]) == 0:
             continue
-        elif len(gts[1]) == 0:
-            continue
-        if type(gts[1][0]) == np.ndarray:
-            for real_label, real_bbox in zip(gts[1][0], gts[2][0]):
-                if int(real_label) == label:
-                    gt_bboxes.append(real_bbox)
         else:
+            # gts should e.g. be [[],
+            #                     [7, 1], -> integer values for the object labels
+            #                     [[0.1, 0.2, 0.3, 0.5], [0.4, 0.3, 0.3, 0.5]] -> bounding boxes
+            assert type(gts[1]) is list and type(gts[2]) is list,\
+                   "Expected lists as entries of the ground truth bounding box file"
             for real_label, real_bbox in zip(gts[1], gts[2]):
                 if real_label == label:
+                    assert all([_val >= 0 and _val <= 1 for _val in real_bbox]), \
+                        "Bounding box entries should be between 0 and 1 but are: {}.".format(real_bbox)
                     gt_bboxes.append(real_bbox)
 
         # calculate all IoUs between ground truth bounding boxes of the given label
@@ -371,7 +377,7 @@ if __name__ == '__main__':
 
     # use YOLOv3 on all images
     print("Using YOLOv3 Network on Generated Images...")
-    # run_yolo(args)
+    run_yolo(args)
 
     # calculate score
     print("Calculating SOA Score...")
