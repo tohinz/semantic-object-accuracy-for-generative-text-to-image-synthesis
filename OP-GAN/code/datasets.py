@@ -14,15 +14,10 @@ from torch.autograd import Variable
 import torchvision.transforms as transforms
 
 import os
-import sys
 import numpy as np
-import pandas as pd
 from PIL import Image
 import numpy.random as random
-if sys.version_info[0] == 2:
-    import cPickle as pickle
-else:
-    import pickle
+import pickle
 
 from miscc.utils import *
 
