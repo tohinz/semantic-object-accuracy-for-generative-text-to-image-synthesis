@@ -2,8 +2,8 @@
 Code for our paper [  Semantic Object Accuracy for Generative Text-to-Image Synthesis](https://www.google.de).
 
 Contents:
-* [Calculate SOA Scores](#use-our-model-op-gan)
-* [Use Our Model (OP-GAN)](#calculate-soa-scores-semantic-object-accuracy)
+* [Calculate SOA Scores](#calculate-soa-scores-semantic-object-accuracy)
+* [Use Our Model (OP-GAN)](#use-our-model-op-gan)
 
 ## Calculate SOA Scores (Semantic Object Accuracy)
 
