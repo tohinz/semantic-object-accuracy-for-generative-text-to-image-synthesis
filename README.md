@@ -1,8 +1,8 @@
 #   Semantic Object Accuracy for Generative Text-to-Image Synthesis
-Code for our paper [  Semantic Object Accuracy for Generative Text-to-Image Synthesis](www.google.de).
+Code for our paper [  Semantic Object Accuracy for Generative Text-to-Image Synthesis](https://www.google.de).
 
 Contents:
-* [Calculate SOA Scores](#calculate-the-soa-scores-(semantic-object-accuracy))
+* [Calculate SOA Scores](#calculate-the-soa-scores-semantic-object-accuracy)
 
 # Calculate the SOA Scores (Semantic Object Accuracy)
 
