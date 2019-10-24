@@ -13,7 +13,6 @@ import skimage.transform
 from miscc.config import cfg
 
 
-
 def compute_transformation_matrix_inverse(bbox):
     x, y = bbox[:, 0], bbox[:, 1]
     w, h = bbox[:, 2], bbox[:, 3]

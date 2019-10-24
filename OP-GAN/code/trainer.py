@@ -406,13 +406,13 @@ class condGANTrainer(object):
                 # do not need to compute gradient for Ds
                 netG.zero_grad()
                 if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
-                    errG_total, G_logs = \
+                    errG_total = \
                         generator_loss(netsD, image_encoder, fake_imgs, real_labels[subset_idx],
                                        words_embs, sent_emb, match_labels[subset_idx], cap_lens, class_ids, self.gpus,
                                        local_labels=label_one_hot, transf_matrices=transf_matrices,
                                        transf_matrices_inv=transf_matrices_inv, max_objects=max_objects)
                 else:
-                    errG_total, G_logs = \
+                    errG_total = \
                         generator_loss(netsD, image_encoder, fake_imgs, real_labels,
                                        words_embs, sent_emb, match_labels, cap_lens, class_ids, self.gpus,
                                        local_labels=label_one_hot, transf_matrices=transf_matrices,
