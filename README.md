@@ -2,9 +2,10 @@
 Code for our paper [  Semantic Object Accuracy for Generative Text-to-Image Synthesis](https://www.google.de).
 
 Contents:
-* [Calculate SOA Scores](#calculate-the-soa-scores-semantic-object-accuracy)
+* [Calculate SOA Scores](#use-our-model-op-gan)
+* [Use Our Model (OP-GAN)](#calculate-soa-scores-semantic-object-accuracy)
 
-# Calculate the SOA Scores (Semantic Object Accuracy)
+## Calculate SOA Scores (Semantic Object Accuracy)
 
 How to calculate the SOA scores for a model:
 
@@ -45,3 +46,4 @@ How to calculate the SOA scores for a model:
 5. Calculating the SOA scores takes about 30-45 minutes (tested with a NVIDIA GTX 1080TI) depending on your hardware (not including the time it takes to generate the images)
 6. More detailed information (if needed) [here](SOA/README.md)
 
+## Use Our Model (OP-GAN)
