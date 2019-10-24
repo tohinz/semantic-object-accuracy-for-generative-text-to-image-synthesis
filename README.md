@@ -88,7 +88,7 @@ pip install -r requirements.txt
 If you find our model useful in your research please consider citing:
 
 ```
-@inproceedings{hinz2019generating,
+@inproceedings{hinz2019semantic,
 title     = {Semantic Object Accuracy for Generative Text-to-Image Synthesis},
 author    = {Tobias Hinz and Stefan Heinrich and Stefan Wermter},
 year      = {2019},
