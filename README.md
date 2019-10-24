@@ -47,7 +47,7 @@ How to calculate the SOA scores for a model:
 6. More detailed information (if needed) [here](SOA/README.md)
 
 ## Use Our Model (OP-GAN)
-# Dependencies
+#### Dependencies
 - python 3.5.2
 - pytorch 1.1.0
 
@@ -57,7 +57,7 @@ Please add the project folder to PYTHONPATH and install the required dependencie
 pip install -r requirements.txt
 ```
 
-# Data
+#### Data
 - MS-COCO:
     - [download](https://www2.informatik.uni-hamburg.de/wtm/software/) our preprocessed data (bounding boxes and bounding box labels), save it to `data/` and extract
     - obtain the train and validation images from the 2014 split [here](http://cocodataset.org/#download), extract and save them in `data/MS-COCO/train/` and `data/MS-COCO/test/`
@@ -65,26 +65,26 @@ pip install -r requirements.txt
         - extract the preprocessed metadata, then add the files downloaded in the first step (bounding boxes and bounding box labels) to the `data/coco/coco/train/` and `data/coco/coco/test/` folder 
         - put the downloaded DAMSM model into `code/coco/attngan/DAMSMencoders/` and extract
 
-# Training
+#### Training
 - to start training run `sh train.sh gpu-ids` where you choose which gpus to train on
 - e.g. to train the AttnGAN architecture on the MS-COCO data set on three GPUs: `sh train.sh 0,1,2,3`
 - training parameters can be adapted via `code/cfg/dataset_train.yml`
 - make sure the DATA_DIR in the respective `code/cfg/dataset_train.yml` points to the correct path
 - results are stored in `output/`
 
-# Evaluating
+#### Evaluating
 - update the eval cfg file in `code/cfg/dataset_eval.yml` and adapt the path of `NET_G` to point to the model you want to use (default path is to the pretrained models linked below)
 - run `sh sample.sh gpu-ids`` to generate images using the specified model
 
-# Pretrained Models
+#### Pretrained Models
     - OP-GAN: [download](https://www2.informatik.uni-hamburg.de/wtm/software/), save to `models` and extract
 
 
-# Acknowledgement
+## Acknowledgement
 - Code for the experiments on MS-COCO is adapted from [AttnGAN](https://github.com/taoxugit/AttnGAN) and [AttnGAN+OP](https://github.com/tohinz/multiple-objects-gan).
 - Code for using YOLOv3 is adapted from [here](https://pjreddie.com/darknet/), [here](https://github.com/eriklindernoren/PyTorch-YOLOv3), and [here](https://github.com/ayooshkathuria/pytorch-yolo-v3).
 
-# Citing
+## Citing
 If you find our model useful in your research please consider citing:
 
 ```
