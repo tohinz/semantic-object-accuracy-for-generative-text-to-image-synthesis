@@ -9,7 +9,7 @@ Contents:
 
 How to calculate the SOA scores for a model:
 
-1. The captions are in ``SOA/captions``
+1. Go to ``SOA``. The captions are in ``SOA/captions``
     1. each file is named ``label_XX_XX.pkl`` describing for which labels the captions in the file are
     2. load the file with pickle
         * ```python
@@ -51,6 +51,7 @@ How to calculate the SOA scores for a model:
 - python 3.5.2
 - pytorch 1.1.0
 
+Go to ``OP-GAN``.
 Please add the project folder to PYTHONPATH and install the required dependencies:
 
 ```
