@@ -61,24 +61,22 @@ pip install -r requirements.txt
 #### Data
 - MS-COCO:
     - [download](https://www2.informatik.uni-hamburg.de/wtm/software/) our preprocessed data (bounding boxes and bounding box labels), save it to `data/` and extract
-    - obtain the train and validation images from the 2014 split [here](http://cocodataset.org/#download), extract and save them in `data/MS-COCO/train/` and `data/MS-COCO/test/`
-    - for the AttnGAN architecture: obtain the preprocessed metadata and the pre-trained DAMSM model from [here](https://github.com/taoxugit/AttnGAN)
-        - extract the preprocessed metadata, then add the files downloaded in the first step (bounding boxes and bounding box labels) to the `data/coco/coco/train/` and `data/coco/coco/test/` folder 
-        - put the downloaded DAMSM model into `code/coco/attngan/DAMSMencoders/` and extract
+    - obtain the train and validation images from the 2014 split [here](http://cocodataset.org/#download), extract and save them in `data/train/` and `data/test/`
+    - download the pre-trained DAMSM model from [here](https://github.com/taoxugit/AttnGAN) and put the downloaded DAMSM model into `models/` and extract
 
 #### Training
 - to start training run `sh train.sh gpu-ids` where you choose which gpus to train on
-- e.g. to train the AttnGAN architecture on the MS-COCO data set on three GPUs: `sh train.sh 0,1,2,3`
+    - e.g. `sh train.sh 0,1,2,3`
 - training parameters can be adapted via `code/cfg/dataset_train.yml`
 - make sure the DATA_DIR in the respective `code/cfg/dataset_train.yml` points to the correct path
 - results are stored in `output/`
 
 #### Evaluating
-- update the eval cfg file in `code/cfg/dataset_eval.yml` and adapt the path of `NET_G` to point to the model you want to use (default path is to the pretrained models linked below)
-- run `sh sample.sh gpu-ids`` to generate images using the specified model
+- update the eval cfg file in `code/cfg/dataset_eval.yml` and adapt the path of `NET_G` to point to the model you want to use (default path is to the pretrained model linked below)
+- run `sh sample.sh gpu-ids` to generate images using the specified model
 
 #### Pretrained Models
-    - OP-GAN: [download](https://www2.informatik.uni-hamburg.de/wtm/software/), save to `models` and extract
+- OP-GAN: [download](https://www2.informatik.uni-hamburg.de/wtm/software/), save to `models` and extract
 
 
 ## Acknowledgement
