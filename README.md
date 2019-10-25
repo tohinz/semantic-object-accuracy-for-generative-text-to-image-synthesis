@@ -62,7 +62,7 @@ pip install -r requirements.txt
 - MS-COCO:
     - [download](https://www2.informatik.uni-hamburg.de/wtm/software/) our preprocessed data (bounding boxes and bounding box labels), save it to `data/` and extract
     - obtain the train and validation images from the 2014 split [here](http://cocodataset.org/#download), extract and save them in `data/train/` and `data/test/`
-    - download the pre-trained DAMSM model from [here](https://github.com/taoxugit/AttnGAN#pretrained-model) and put the downloaded DAMSM model into `models/` and extract
+    - download the pre-trained DAMSM for COCO model from [here](https://github.com/taoxugit/AttnGAN/#pretrained-model) and put the downloaded DAMSM model into `models/` and extract
 
 #### Training
 - to start training run `sh train.sh gpu-ids` where you choose which gpus to train on
