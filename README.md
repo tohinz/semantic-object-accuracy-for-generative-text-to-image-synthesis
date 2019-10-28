@@ -60,7 +60,7 @@ pip install -r requirements.txt
 
 #### Data
 - MS-COCO:
-    - [download](https://www2.informatik.uni-hamburg.de/wtm/software/) our preprocessed data (bounding boxes, bounding box labels, preprocessed captions), save to `data/` and extract
+    - [download](https://www2.informatik.uni-hamburg.de/wtm/software/semantic-object-accuracy/data.tar.gz) our preprocessed data (bounding boxes, bounding box labels, preprocessed captions), save to `data/` and extract
         - the preprocessed captions are obtained from and are the same as in the [AttnGAN implementation](https://github.com/taoxugit/AttnGAN)
         - the generateod bounding boxes for evaluating at test time were generated with code from the [Obj-GAN](https://github.com/jamesli1618/Obj-GAN)
     - obtain the train and validation images from the 2014 split [here](http://cocodataset.org/#download), extract and save them in `data/train/` and `data/test/`
@@ -79,7 +79,7 @@ pip install -r requirements.txt
     - e.g. `sh sample.sh 0`
 
 #### Pretrained Models
-- OP-GAN: [download](https://www2.informatik.uni-hamburg.de/wtm/software/), save to `models` and extract
+- OP-GAN: [download](https://www2.informatik.uni-hamburg.de/wtm/software/semantic-object-accuracy/op-gan.pth.tar.gz), save to `models` and extract
 
 
 ## Acknowledgement
