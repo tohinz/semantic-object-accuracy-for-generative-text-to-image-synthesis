@@ -7,6 +7,10 @@ Contents:
 
 ## Calculate SOA Scores (Semantic Object Accuracy)
 
+Semantic Object Accuracy (SOA) is a score we introduce to evaluate the quality of generative text-to-image models. For this, we provide captions from the MS-COCO data set from which the evaluated model should generate images. We then use a pre-trained object detector to check whether the generated images contain the object that was specified in the caption.
+
+E.g. when an image is generated from the caption `a car is driving down the street` we check if the generated image actually contains a car.
+
 How to calculate the SOA scores for a model:
 
 1. Go to ``SOA``. The captions are in ``SOA/captions``
