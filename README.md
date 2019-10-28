@@ -43,7 +43,7 @@ How to calculate the SOA scores for a model:
 
 3. Once you have generated images for each label you can calculate the SOA scores:
     1. Install requirements from ``SOA/requirements.txt`` (we use Python 3.5.2)
-    2. TODO download the YOLOv3 weights file and save it as ``SOA/yolov3.weights``
+    2. [download](https://www2.informatik.uni-hamburg.de/wtm/software/semantic-object-accuracy/yolov3.weights.tar.gz) the YOLOv3 weights file and save it as ``SOA/yolov3.weights``
     3. run ``python calculate_soa.py --images path/to/folder/created-in-step-2ii --output path/to/folder/where-results-are-saved --gpu 0``
 
 4. If you also want to calculate IoU values check the detailed instructions [here](SOA/README.md)
