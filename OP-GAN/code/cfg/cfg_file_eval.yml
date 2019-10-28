@@ -1,25 +1,21 @@
 CONFIG_NAME: 'attn2'
 
 DATASET_NAME: 'coco'
-DATA_DIR: '../../data/coco/coco_attn'
+DATA_DIR: '../data'
 GPU_ID: '0'
 WORKERS: 1
 
-B_VALIDATION: True
 TREE:
     BRANCH_NUM: 3
 
-
 TRAIN:
     FLAG: False
-    NET_G: '' # '../output/coco_glu-gan2_2019_05_24_11_48_05/Model/checkpoint_0100.pth'
+    NET_G: '../models/op-gan.pth'
     B_NET_D: False
-    BATCH_SIZE: 50
-    NET_E: '../DAMSMencoders/coco/text_encoder100.pth'
+    BATCH_SIZE: [50]
+    NET_E: '../models/coco/text_encoder100.pth'
     OPTIMIZE_DATA_LOADING: False
-    MAX_SAMPLING_OBJECT: 3
-    BBOX_OVERLAP: False
-
+    GENERATED_BBOXES: True
 
 GAN:
     DF_DIM: 96

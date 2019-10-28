@@ -38,7 +38,6 @@ class condGANTrainer(object):
 
         self.batch_size = cfg.TRAIN.BATCH_SIZE
         self.max_epoch = cfg.TRAIN.MAX_EPOCH
-        self.snapshot_interval = cfg.TRAIN.SNAPSHOT_INTERVAL
         self.resume = resume
 
         s_gpus = cfg.GPU_ID.split(',')
@@ -176,7 +175,7 @@ class condGANTrainer(object):
                     fake_labels[idx] = fake_labels[idx].cuda().detach()
                     match_labels[idx] = match_labels[idx].cuda().detach()
         else:
-            batch_size = self.batch_size
+            batch_size = self.batch_size[0]
             real_labels = Variable(torch.FloatTensor(batch_size).fill_(1))
             fake_labels = Variable(torch.FloatTensor(batch_size).fill_(0))
             match_labels = Variable(torch.LongTensor(range(batch_size)))
@@ -267,7 +266,7 @@ class condGANTrainer(object):
                                     None, cap_lens, None, self.batch_size[subset_idx])
         else:
             _, _, att_maps = words_loss(region_features.detach(), words_embs.detach(),
-                                    None, cap_lens, None, self.batch_size)
+                                    None, cap_lens, None, self.batch_size[0])
         img_set, _ = build_super_images(fake_imgs[i].detach().cpu(), captions, self.ixtoword, att_maps, att_sze)
         if img_set is not None:
             im = Image.fromarray(img_set)
@@ -296,7 +295,7 @@ class condGANTrainer(object):
                     local_noise[idx] = local_noise[idx].cuda()
                     fixed_noise[idx] = fixed_noise[idx].cuda()
         else:
-            batch_size = self.batch_size
+            batch_size = self.batch_size[0]
             nz = cfg.GAN.Z_DIM
             noise = Variable(torch.FloatTensor(batch_size, nz))
             local_noise = Variable(torch.FloatTensor(batch_size, 32))
@@ -469,15 +468,11 @@ class condGANTrainer(object):
             text_encoder = RNN_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
             state_dict = torch.load(cfg.TRAIN.NET_E, map_location=lambda storage, loc: storage)
             text_encoder.load_state_dict(state_dict)
-            # print('Load text encoder from:', cfg.TRAIN.NET_E)
             text_encoder = text_encoder.cuda()
             text_encoder.eval()
             print('Loaded text encoder from:', cfg.TRAIN.NET_E)
 
-            if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
-                batch_size = self.batch_size[0]
-            else:
-                batch_size = self.batch_size
+            batch_size = self.batch_size[0]
             nz = cfg.GAN.Z_DIM
             noise = Variable(torch.FloatTensor(batch_size, nz)).cuda()
             local_noise = Variable(torch.FloatTensor(batch_size, 32)).cuda()
@@ -485,44 +480,23 @@ class condGANTrainer(object):
             model_dir = cfg.TRAIN.NET_G
             state_dict = torch.load(model_dir, map_location=lambda storage, loc: storage)
             netG.load_state_dict(state_dict["netG"])
+            max_objects = 10
             print('Load G from: ', model_dir)
 
             # the path to save generated images
-            s_tmp = model_dir[:model_dir.rfind('.pth')]
-            save_dir = '%s/%s' % (s_tmp, split_dir)
+            s_tmp = model_dir[:model_dir.rfind('.pth')].split("/")[-1]
+            save_dir = '%s/%s/%s' % ("../output", s_tmp, split_dir)
             mkdir_p(save_dir)
-            all_sentence_embeddings = {}
-            all_captions = {}
+            print("Saving images to: {}".format(save_dir))
 
             number_batches = num_samples // batch_size
+            if number_batches < 1:
+                number_batches = 1
 
-            if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
-                data_iter = []
-                for _idx in range(len(self.data_loader)):
-                    data_iter.append(iter(self.data_loader[_idx]))
-                total_batches_left = sum([len(self.data_loader[i]) for i in range(len(self.data_loader))])
-                current_probability = [len(self.data_loader[i]) for i in range(len(self.data_loader))]
-                current_probability_percent = [current_probability[i] / float(total_batches_left) for i in
-                                               range(len(current_probability))]
-                max_objects = 10
-            else:
-                data_iter = iter(self.data_loader)
-                max_objects = 3
+            data_iter = iter(self.data_loader)
 
             for step in tqdm(range(number_batches)):
-                if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
-                    # randomly sample from which subset to sample
-                    subset_idx = np.random.choice(range(len(self.data_loader)), size=None,
-                                                  p=current_probability_percent)
-                    total_batches_left -= 1
-                    if total_batches_left > 0:
-                        current_probability[subset_idx] -= 1
-                        current_probability_percent = [current_probability[i] / float(total_batches_left) for i in
-                                                       range(len(current_probability))]
-
-                    data = data_iter[subset_idx].next()
-                else:
-                    data = data_iter.next()
+                data = data_iter.next()
 
                 imgs, captions, cap_lens, class_ids, keys, transformation_matrices, label_one_hot, _ = prepare_data(data, eval=True)
 
@@ -547,8 +521,8 @@ class condGANTrainer(object):
                 inputs = (noise, local_noise, sent_emb, words_embs, mask, transf_matrices, transf_matrices_inv, label_one_hot, max_objects)
                 with torch.no_grad():
                     fake_imgs, _, mu, logvar = nn.parallel.data_parallel(netG, inputs, self.gpus)
-                for j in range(batch_size):
-                    s_tmp = '%s/single/%s' % (save_dir, keys[j])
+                for batch_idx, j in enumerate(range(batch_size)):
+                    s_tmp = '%s/%s' % (save_dir, keys[j])
                     folder = s_tmp[:s_tmp.rfind('/')]
                     if not os.path.isdir(folder):
                         print('Make a new folder: ', folder)
@@ -561,5 +535,5 @@ class condGANTrainer(object):
                     im = im.astype(np.uint8)
                     im = np.transpose(im, (1, 2, 0))
                     im = Image.fromarray(im)
-                    fullpath = '%s_s%d.png' % (s_tmp, k)
+                    fullpath = '%s_s%d.png' % (s_tmp, step*batch_size+batch_idx)
                     im.save(fullpath)

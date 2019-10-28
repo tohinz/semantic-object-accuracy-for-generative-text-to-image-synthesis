@@ -1,1 +1,4 @@
-# Placeholder to add directory to the Git.
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore

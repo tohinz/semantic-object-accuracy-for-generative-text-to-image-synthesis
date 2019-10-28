@@ -138,7 +138,7 @@ class TextDataset(data.Dataset):
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         self.target_transform = target_transform
         self.embeddings_num = cfg.TEXT.CAPTIONS_PER_IMAGE
-        self.img_dir = img_dir
+        self.img_dir = os.path.join(data_dir, img_dir)
         self.split_dir = os.path.join(data_dir, split)
         self.eval = eval
         self.use_generated_bboxes = use_generated_bboxes
@@ -166,25 +166,25 @@ class TextDataset(data.Dataset):
     def load_bbox(self):
         bbox_path = os.path.join(self.split_dir, 'bboxes.pickle')
         if self.use_generated_bboxes:
-            bbox_path = os.path.join(self.split_dir, 'bboxes_generated_sorted.pickle')
+            bbox_path = os.path.join(self.split_dir, 'bboxes_generated.pickle')
         elif cfg.TRAIN.OPTIMIZE_DATA_LOADING:
             bbox_path = os.path.join(self.split_dir, 'bboxes_large.pickle')
         with open(bbox_path, "rb") as f:
             bboxes = pickle.load(f, encoding='latin1')
             bboxes = np.array(bboxes)
-        print("bboxes: ", bboxes.shape)
+        print("Load bounding boxes: ", bboxes.shape)
         return bboxes
 
     def load_labels(self):
         label_path = os.path.join(self.split_dir, 'labels.pickle')
         if self.use_generated_bboxes:
-            label_path = os.path.join(self.split_dir, 'labels_generated_sorted.pickle')
+            label_path = os.path.join(self.split_dir, 'labels_generated.pickle')
         elif cfg.TRAIN.OPTIMIZE_DATA_LOADING:
             label_path = os.path.join(self.split_dir, 'labels_large.pickle')
         with open(label_path, "rb") as f:
             labels = pickle.load(f, encoding='latin1')
             labels = np.array(labels)
-        print("labels: ", labels.shape)
+        print("Load Labels: ", labels.shape)
         return labels
 
     def load_captions(self, data_dir, filenames):
@@ -274,7 +274,7 @@ class TextDataset(data.Dataset):
             with open(filepath, 'wb') as f:
                 pickle.dump([train_captions, test_captions,
                              ixtoword, wordtoix], f, protocol=2)
-                print('Save to: ', filepath)
+                print('Save captions to: ', filepath)
         else:
             with open(filepath, 'rb') as f:
                 x = pickle.load(f, encoding='latin1')
@@ -282,7 +282,7 @@ class TextDataset(data.Dataset):
                 ixtoword, wordtoix = x[2], x[3]
                 del x
                 n_words = len(ixtoword)
-                print('Load from: ', filepath)
+                print('Load captions from: ', filepath)
         if split == 'train':
             # a list of list: each list contains
             # the indices of words in a sentence
@@ -291,6 +291,7 @@ class TextDataset(data.Dataset):
         else:  # split=='test'
             captions = test_captions
             filenames = test_names
+        print("Captions:", len(captions))
         return filenames, captions, ixtoword, wordtoix, n_words
 
     def load_class_id(self, data_dir, total_num):

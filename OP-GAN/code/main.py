@@ -71,8 +71,6 @@ if __name__ == "__main__":
         cfg.DATA_DIR = args.data_dir
     if args.net_g != "":
         cfg.TRAIN.NET_G = args.net_g
-    if args.max_sampling_objects != -1:
-        cfg.TRAIN.MAX_SAMPLING_OBJECT = args.max_sampling_objects
     print('Using config:')
     pprint.pprint(cfg)
 
@@ -97,8 +95,10 @@ if __name__ == "__main__":
 
     split_dir, bshuffle = 'train', True
     eval = False
+    img_dir = "train/train2014"
     if not cfg.TRAIN.FLAG:
         split_dir = 'test'
+        img_dir = "test/val2014"
         eval = True
 
     # Get data loader
@@ -109,34 +109,27 @@ if __name__ == "__main__":
 
     if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
         num_max_objects = 10
-        if cfg.TRAIN.FLAG:
-            batch_sizes = [32, 28, 24, 24, 20, 16, 16, 16, 12, 12, 12]
-            cfg.TRAIN.BATCH_SIZE = batch_sizes
-        else:
-            batch_sizes = [cfg.TRAIN.BATCH_SIZE] * 11
-            cfg.TRAIN.BATCH_SIZE = batch_sizes
         dataset_indices = get_dataset_indices(num_max_objects=num_max_objects, split="train"\
                                               if cfg.TRAIN.FLAG else "test")
         dataset = TextDataset(cfg.DATA_DIR, img_dir, split_dir, base_size=cfg.TREE.BASE_SIZE,
-                              transform=image_transform, eval=eval, use_generated_bboxes=args.generated_bboxes)
+                              transform=image_transform, eval=eval, use_generated_bboxes=cfg.TRAIN.GENERATED_BBOXES)
         assert dataset
         dataset_subsets = []
         dataloaders = []
         for max_objects in range(num_max_objects+1):
             subset = torch.utils.data.Subset(dataset, dataset_indices[max_objects])
             dataset_subsets.append(subset)
-            dataloader = torch.utils.data.DataLoader(subset, batch_size=batch_sizes[max_objects], drop_last=True,
-                                                     shuffle=bshuffle, num_workers=int(cfg.WORKERS))
+            dataloader = torch.utils.data.DataLoader(subset, batch_size=cfg.TRAIN.BATCH_SIZE[max_objects],
+                                                     drop_last=True, shuffle=bshuffle, num_workers=int(cfg.WORKERS))
             dataloaders.append(dataloader)
 
         algo = trainer(output_dir, dataloaders, dataset.n_words, dataset.ixtoword, resume)
 
     else:
-        dataset = TextDataset(cfg.DATA_DIR, img_dir, split_dir,
-                              base_size=cfg.TREE.BASE_SIZE,
-                              transform=image_transform, eval=eval, use_generated_bboxes=args.generated_bboxes)
+        dataset = TextDataset(cfg.DATA_DIR, img_dir, split_dir, base_size=cfg.TREE.BASE_SIZE,
+                              transform=image_transform, eval=eval, use_generated_bboxes=cfg.TRAIN.GENERATED_BBOXES)
         assert dataset
-        dataloader = torch.utils.data.DataLoader( dataset, batch_size=cfg.TRAIN.BATCH_SIZE,
+        dataloader = torch.utils.data.DataLoader( dataset, batch_size=cfg.TRAIN.BATCH_SIZE[0],
                                                   drop_last=True, shuffle=bshuffle, num_workers=int(cfg.WORKERS))
 
         algo = trainer(output_dir, dataloader, dataset.n_words, dataset.ixtoword, resume)
@@ -153,9 +146,11 @@ if __name__ == "__main__":
             copyfile("datasets.py", output_dir + "/" + "datasets.py")
             copyfile(args.cfg_file, output_dir + "/" + "cfg_file_train.yml")
         algo.train()
+        end_t = time.time()
+        print('Total time for training:', end_t - start_t)
     else:
         '''generate images from pre-extracted embeddings'''
-        use_generated_bboxes = True
-        algo.sampling(split_dir, use_generated_bboxes)  # generate images
-    end_t = time.time()
-    print('Total time for training:', end_t - start_t)
+        assert not cfg.TRAIN.OPTIMIZE_DATA_LOADING, "\"cfg.TRAIN.OPTIMIZE_DATA_LOADING\" not valid for sampling since we use"\
+                                                    "generated bounding boxes at test time."
+        use_generated_bboxes = cfg.TRAIN.GENERATED_BBOXES
+        algo.sampling(split_dir, num_samples=500)  # generate images

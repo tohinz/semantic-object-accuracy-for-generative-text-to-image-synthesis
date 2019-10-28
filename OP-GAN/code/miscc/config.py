@@ -5,7 +5,6 @@ import os.path as osp
 import numpy as np
 from easydict import EasyDict as edict
 
-
 __C = edict()
 cfg = __C
 
@@ -22,12 +21,10 @@ __C.TREE = edict()
 __C.TREE.BRANCH_NUM = 3
 __C.TREE.BASE_SIZE = 64
 
-
 # Training options
 __C.TRAIN = edict()
-__C.TRAIN.BATCH_SIZE = 64
+__C.TRAIN.BATCH_SIZE = [24]
 __C.TRAIN.MAX_EPOCH = 120
-__C.TRAIN.SNAPSHOT_INTERVAL = 2000
 __C.TRAIN.DISCRIMINATOR_LR = 2e-4
 __C.TRAIN.GENERATOR_LR = 2e-4
 __C.TRAIN.ENCODER_LR = 2e-4
@@ -39,13 +36,13 @@ __C.TRAIN.BBOX_LOSS = True
 __C.TRAIN.B_NET_D = True
 __C.TRAIN.OPTIMIZE_DATA_LOADING = True
 __C.TRAIN.EMPTY_CACHE = False
+__C.TRAIN.GENERATED_BBOXES = False
 
 __C.TRAIN.SMOOTH = edict()
 __C.TRAIN.SMOOTH.GAMMA1 = 5.0
 __C.TRAIN.SMOOTH.GAMMA3 = 10.0
 __C.TRAIN.SMOOTH.GAMMA2 = 5.0
 __C.TRAIN.SMOOTH.LAMBDA = 1.0
-
 
 # Modal options
 __C.GAN = edict()
@@ -56,7 +53,6 @@ __C.GAN.CONDITION_DIM = 100
 __C.GAN.R_NUM = 2
 __C.GAN.B_ATTENTION = True
 __C.GAN.B_DCGAN = False
-
 
 __C.TEXT = edict()
 __C.TEXT.CAPTIONS_PER_IMAGE = 10

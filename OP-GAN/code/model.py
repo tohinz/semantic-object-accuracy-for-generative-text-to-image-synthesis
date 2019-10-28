@@ -89,29 +89,6 @@ def channel_pool(input, kernel_size):
     return pooled.squeeze()
 
 
-def merge_tensors(source, new_features, idx):
-    if idx == 0:
-        return new_features
-    elif cfg.TRAIN.BBOX_OVERLAP_SIMPLE:
-        nz = torch.nonzero(new_features)
-        source[nz[:, 0], nz[:, 1], nz[:, 2], nz[:, 3]] = new_features[nz[:, 0], nz[:, 1], nz[:, 2], nz[:, 3]]
-        return source
-    elif cfg.TRAIN.BBOX_OVERLAP:
-        num_channels = source.shape[1]
-        source_pool = channel_pool(source, num_channels)
-        new_features_pool = channel_pool(new_features, num_channels)
-
-        difference = new_features_pool.ge(source_pool)
-        diff_nonzero = torch.nonzero(difference)
-
-        source[diff_nonzero[:, 0], :, diff_nonzero[:, 1], diff_nonzero[:, 2]] = new_features[diff_nonzero[:, 0], :,
-                                                                                diff_nonzero[:, 1], diff_nonzero[:, 2]]
-
-        return source
-    else:
-        raise NotImplementedError
-
-
 class BBOX_NET(nn.Module):
     # some code is modified from vae examples
     # (https://github.com/pytorch/examples/blob/master/vae/main.py)
@@ -430,10 +407,7 @@ class INIT_STAGE_G(nn.Module):
                 h_code_local = self.local1(current_label)
                 h_code_local = self.local2(h_code_local)
                 h_code_local = stn(h_code_local, transf_matrices_inv[:, idx], h_code_local.shape)
-                if cfg.TRAIN.BBOX_OVERLAP or cfg.TRAIN.BBOX_OVERLAP_SIMPLE:
-                    h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
-                else:
-                    h_code_locals += h_code_local
+                h_code_locals += h_code_local
 
         bbox_code = self.bbox_net(local_labels, transf_matrices_inv, max_objects)
         c_z_code = torch.cat((c_code, z_code, bbox_code), 1)
@@ -515,10 +489,7 @@ class NEXT_STAGE_G(nn.Module):
                 h_code_local = self.local1(current_input)
                 h_code_local = self.local2(h_code_local)
                 h_code_local = stn(h_code_local, transf_matrices_inv[:, idx], h_code_locals.shape)
-                if cfg.TRAIN.BBOX_OVERLAP or cfg.TRAIN.BBOX_OVERLAP_SIMPLE:
-                    h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
-                else:
-                    h_code_locals += h_code_local
+                h_code_locals += h_code_local
 
         out_code = torch.cat((out_code, h_code_locals), 1)
 
@@ -715,10 +686,7 @@ class D_NET64(nn.Module):
             h_code_local = self.local(h_code_local)
             h_code_local = stn(h_code_local, transf_matrices_inv[:, idx],
                                (h_code_local.shape[0], h_code_local.shape[1], 16, 16))
-            if cfg.TRAIN.BBOX_OVERLAP or cfg.TRAIN.BBOX_OVERLAP_SIMPLE:
-                h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
-            else:
-                h_code_locals += h_code_local
+            h_code_locals += h_code_local
 
         h_code = self.conv1(image)
         h_code = self.act(h_code)
@@ -792,10 +760,7 @@ class D_NET128(nn.Module):
             h_code_local = self.local(h_code_local)
             h_code_local = stn(h_code_local, transf_matrices_inv[:, idx],
                                (h_code_local.shape[0], h_code_local.shape[1], 32, 32))
-            if cfg.TRAIN.BBOX_OVERLAP or cfg.TRAIN.BBOX_OVERLAP_SIMPLE:
-                h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
-            else:
-                h_code_locals += h_code_local
+            h_code_locals += h_code_local
 
         x_code_32 = self.encode_img(image)  # 32 x 32 x df*2
         x_code_32 = torch.cat((x_code_32, h_code_locals), 1)  # 32 x 32 x df*4
@@ -861,10 +826,7 @@ class D_NET256(nn.Module):
             h_code_local = self.local(h_code_local)
             h_code_local = stn(h_code_local, transf_matrices_inv[:, idx],
                                (h_code_local.shape[0], h_code_local.shape[1], 64, 64))
-            if cfg.TRAIN.BBOX_OVERLAP or cfg.TRAIN.BBOX_OVERLAP_SIMPLE:
-                h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
-            else:
-                h_code_locals += h_code_local
+            h_code_locals += h_code_local
 
         x_code_64 = self.encode_img(image)
         x_code_64 = torch.cat((x_code_64, h_code_locals), 1)
