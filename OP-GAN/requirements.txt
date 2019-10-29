@@ -41,7 +41,7 @@ python-dateutil==2.7.3
 pytorch-nlp==0.3.5
 pytz==2018.7
 PyWavelets==1.0.3
-PyYAML==3.13
+PyYAML==5.1
 ray==0.5.3
 redis==2.10.6
 requests==2.20.0
