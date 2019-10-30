@@ -1,5 +1,5 @@
 #   Semantic Object Accuracy for Generative Text-to-Image Synthesis
-Code for our paper [Semantic Object Accuracy for Generative Text-to-Image Synthesis](https://www.google.de).
+Code for our paper [Semantic Object Accuracy for Generative Text-to-Image Synthesis](https://arxiv.org/abs/1910.13321).
 
 Contents:
 * [Calculate SOA Scores](#calculate-soa-scores-semantic-object-accuracy)
@@ -9,7 +9,7 @@ Contents:
 
 Semantic Object Accuracy (SOA) is a score we introduce to evaluate the quality of generative text-to-image models. For this, we provide captions from the MS-COCO data set from which the evaluated model should generate images. We then use a pre-trained object detector to check whether the generated images contain the object that was specified in the caption.
 
-E.g. when an image is generated from the caption `a car is driving down the street` we check if the generated image actually contains a car. For more details check section 4 of our [paper](https://www.google.de)
+E.g. when an image is generated from the caption `a car is driving down the street` we check if the generated image actually contains a car. For more details check section 4 of our [paper](https://arxiv.org/abs/1910.13321)
 
 How to calculate the SOA scores for a model:
 
