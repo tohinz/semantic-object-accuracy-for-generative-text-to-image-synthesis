@@ -1,6 +1,8 @@
 #   Semantic Object Accuracy for Generative Text-to-Image Synthesis
 Code for our paper [Semantic Object Accuracy for Generative Text-to-Image Synthesis](https://arxiv.org/abs/1910.13321).
 
+Summary in our [blog post](https://www.tobiashinz.com/2019/10/30/semantic-object-accuracy-for-generative-text-to-image-synthesis).
+
 Contents:
 * [Calculate SOA Scores](#calculate-soa-scores-semantic-object-accuracy)
 * [Use Our Model (OP-GAN)](#use-our-model-op-gan)
