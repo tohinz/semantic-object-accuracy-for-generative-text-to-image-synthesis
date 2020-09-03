@@ -1,5 +1,5 @@
 #   Semantic Object Accuracy for Generative Text-to-Image Synthesis
-Code for our paper [Semantic Object Accuracy for Generative Text-to-Image Synthesis](https://arxiv.org/abs/1910.13321).
+Code for our paper [Semantic Object Accuracy for Generative Text-to-Image Synthesis](https://www.computer.org/csdl/journal/tp/5555/01/09184960/1mNmR2Z8SYg) ([Arxiv Version](https://arxiv.org/abs/1910.13321)).
 
 Summary in our [blog post](https://www.tobiashinz.com/2019/10/30/semantic-object-accuracy-for-generative-text-to-image-synthesis).
 
