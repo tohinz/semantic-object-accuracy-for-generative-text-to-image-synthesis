@@ -89,6 +89,18 @@ def channel_pool(input, kernel_size):
     return pooled.squeeze()
 
 
+def merge_tensors(source, new_features, idx):
+    """This method deals with the fact that some bboxes overlap each other.
+    To deal with this we use the simple heuristic that the smaller bbox contains the object in the foreground.
+    As such features in smaller bboxes replace the features of larger bboxes in overlapping areas"""
+    if idx == 0:
+        return new_features
+    else:
+        nz = torch.nonzero(new_features)
+        source[nz[:, 0], nz[:, 1], nz[:, 2], nz[:, 3]] = new_features[nz[:, 0], nz[:, 1], nz[:, 2], nz[:, 3]]
+        return source
+
+
 class BBOX_NET(nn.Module):
     # some code is modified from vae examples
     # (https://github.com/pytorch/examples/blob/master/vae/main.py)
@@ -407,7 +419,7 @@ class INIT_STAGE_G(nn.Module):
                 h_code_local = self.local1(current_label)
                 h_code_local = self.local2(h_code_local)
                 h_code_local = stn(h_code_local, transf_matrices_inv[:, idx], h_code_local.shape)
-                h_code_locals += h_code_local
+                h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
 
         bbox_code = self.bbox_net(local_labels, transf_matrices_inv, max_objects)
         c_z_code = torch.cat((c_code, z_code, bbox_code), 1)
@@ -489,7 +501,7 @@ class NEXT_STAGE_G(nn.Module):
                 h_code_local = self.local1(current_input)
                 h_code_local = self.local2(h_code_local)
                 h_code_local = stn(h_code_local, transf_matrices_inv[:, idx], h_code_locals.shape)
-                h_code_locals += h_code_local
+                h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
 
         out_code = torch.cat((out_code, h_code_locals), 1)
 
@@ -686,7 +698,7 @@ class D_NET64(nn.Module):
             h_code_local = self.local(h_code_local)
             h_code_local = stn(h_code_local, transf_matrices_inv[:, idx],
                                (h_code_local.shape[0], h_code_local.shape[1], 16, 16))
-            h_code_locals += h_code_local
+            h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
 
         h_code = self.conv1(image)
         h_code = self.act(h_code)
@@ -760,7 +772,7 @@ class D_NET128(nn.Module):
             h_code_local = self.local(h_code_local)
             h_code_local = stn(h_code_local, transf_matrices_inv[:, idx],
                                (h_code_local.shape[0], h_code_local.shape[1], 32, 32))
-            h_code_locals += h_code_local
+            h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
 
         x_code_32 = self.encode_img(image)  # 32 x 32 x df*2
         x_code_32 = torch.cat((x_code_32, h_code_locals), 1)  # 32 x 32 x df*4
@@ -826,7 +838,7 @@ class D_NET256(nn.Module):
             h_code_local = self.local(h_code_local)
             h_code_local = stn(h_code_local, transf_matrices_inv[:, idx],
                                (h_code_local.shape[0], h_code_local.shape[1], 64, 64))
-            h_code_locals += h_code_local
+            h_code_locals = merge_tensors(h_code_locals, h_code_local, idx)
 
         x_code_64 = self.encode_img(image)
         x_code_64 = torch.cat((x_code_64, h_code_locals), 1)
