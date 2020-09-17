@@ -85,7 +85,7 @@ pip install -r requirements.txt
     - e.g. `sh sample.sh 0`
 
 #### Pretrained Models
-- OP-GAN: [download](https://www2.informatik.uni-hamburg.de/wtm/software/semantic-object-accuracy/op-gan.pth.tar.gz), save to `models` and extract
+- OP-GAN: [download](https://www2.informatik.uni-hamburg.de/wtm/software/semantic-object-accuracy/op-gan.pth) and save to `models`
 
 
 ## Acknowledgement
