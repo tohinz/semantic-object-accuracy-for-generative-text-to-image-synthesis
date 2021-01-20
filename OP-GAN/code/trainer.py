@@ -17,7 +17,7 @@ import scipy.misc
 
 from miscc.config import cfg
 from miscc.utils import mkdir_p
-from miscc.utils import build_super_images, build_super_images2
+from miscc.utils import build_super_images, build_super_images2, count_learnable_params
 from miscc.utils import weights_init, load_params, copy_G_params
 from model import G_NET
 from datasets import prepare_data
@@ -97,7 +97,9 @@ class condGANTrainer(object):
         netG.apply(weights_init)
         for i in range(len(netsD)):
             netsD[i].apply(weights_init)
+        print('# of params in netG: %s' % count_learnable_params(netG))
         print('# of netsD', len(netsD))
+        print('# of params in netsD: %s' % [count_learnable_params(netD) for netD in netsD])
         epoch = 0
 
         if self.resume:

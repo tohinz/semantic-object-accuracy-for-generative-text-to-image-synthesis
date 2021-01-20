@@ -342,6 +342,10 @@ def copy_G_params(model):
     return flatten
 
 
+def count_learnable_params(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
 def mkdir_p(path):
     try:
         os.makedirs(path)
