@@ -74,7 +74,6 @@ if __name__ == "__main__":
     print('Using config:')
     pprint.pprint(cfg)
 
-
     args.manualSeed = random.randint(1, 10000)
     random.seed(args.manualSeed)
     np.random.seed(args.manualSeed)
@@ -87,7 +86,7 @@ if __name__ == "__main__":
         resume = False
         now = datetime.datetime.now(dateutil.tz.tzlocal())
         timestamp = now.strftime('%Y_%m_%d_%H_%M_%S')
-        output_dir = '../output/%s_%s_%s' % (cfg.DATASET_NAME, cfg.CONFIG_NAME, timestamp)
+        output_dir = os.path.join(cfg.OUTPUT_DIR, '%s_%s_%s' % (cfg.DATASET_NAME, cfg.CONFIG_NAME, timestamp))
     else:
         assert os.path.isdir(args.resume)
         resume = True
@@ -137,20 +136,21 @@ if __name__ == "__main__":
     start_t = time.time()
     if cfg.TRAIN.FLAG:
         if not resume:
-            copyfile(sys.argv[0], output_dir + "/" + sys.argv[0])
-            copyfile("trainer.py", output_dir + "/" + "trainer.py")
-            copyfile("model.py", output_dir + "/" + "model.py")
-            copyfile("miscc/utils.py", output_dir + "/" + "utils.py")
-            copyfile("miscc/losses.py", output_dir + "/" + "losses.py")
-            copyfile("GlobalAttention.py", output_dir + "/" + "GlobalAttention.py")
-            copyfile("datasets.py", output_dir + "/" + "datasets.py")
-            copyfile(args.cfg_file, output_dir + "/" + "cfg_file_train.yml")
+            copyfile("code/main.py", os.path.join(output_dir, "main.py"))
+            copyfile("code/trainer.py", os.path.join(output_dir, "trainer.py"))
+            copyfile("code/model.py", os.path.join(output_dir, "model.py"))
+            copyfile("code/miscc/utils.py", os.path.join(output_dir, "utils.py"))
+            copyfile("code/miscc/losses.py", os.path.join(output_dir, "losses.py"))
+            copyfile("code/GlobalAttention.py", os.path.join(output_dir, "GlobalAttention.py"))
+            copyfile("code/datasets.py", os.path.join(output_dir, "datasets.py"))
+            copyfile(args.cfg_file, os.path.join(output_dir, "cfg_file_train.yml"))
         algo.train()
         end_t = time.time()
         print('Total time for training:', end_t - start_t)
     else:
         '''generate images from pre-extracted embeddings'''
-        assert not cfg.TRAIN.OPTIMIZE_DATA_LOADING, "\"cfg.TRAIN.OPTIMIZE_DATA_LOADING\" not valid for sampling since we use"\
+        assert not cfg.TRAIN.OPTIMIZE_DATA_LOADING, "\"cfg.TRAIN.OPTIMIZE_DATA_LOADING\" " \
+                                                    "not valid for sampling since we use" \
                                                     "generated bounding boxes at test time."
         use_generated_bboxes = cfg.TRAIN.GENERATED_BBOXES
         algo.sampling(split_dir, num_samples=500)  # generate images

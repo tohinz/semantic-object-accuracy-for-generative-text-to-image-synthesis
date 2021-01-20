@@ -66,8 +66,8 @@ def drawCaption(convas, captions, ixtoword, vis_size, off1=2, off2=2):
     num = captions.size(0)
     img_txt = Image.fromarray(convas)
     # get a font
-    # fnt = None  # ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 50)
-    fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 50)
+    # fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 50)
+    fnt = ImageFont.load_default()
     # get a drawing context
     d = ImageDraw.Draw(img_txt)
     sentence_list = []
@@ -87,9 +87,9 @@ def drawCaption(convas, captions, ixtoword, vis_size, off1=2, off2=2):
 
 def build_super_images(real_imgs, captions, ixtoword,
                        attn_maps, att_sze, lr_imgs=None,
-                       batch_size=cfg.TRAIN.BATCH_SIZE,
+                       batch_size=cfg.TRAIN.BATCH_SIZE[0],
                        max_word_num=cfg.TEXT.WORDS_NUM):
-    nvis = 8
+    nvis = min(8, len(attn_maps))
     real_imgs = real_imgs[:nvis]
     if lr_imgs is not None:
         lr_imgs = lr_imgs[:nvis]
@@ -164,7 +164,8 @@ def build_super_images(real_imgs, captions, ixtoword,
             if (vis_size // att_sze) > 1:
                 one_map = \
                     skimage.transform.pyramid_expand(one_map, sigma=20,
-                                                     upscale=vis_size // att_sze)
+                                                     upscale=vis_size // att_sze,
+                                                     multichannel=True)
             row_beforeNorm.append(one_map)
             minV = one_map.min()
             maxV = one_map.max()

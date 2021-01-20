@@ -1,0 +1,16 @@
+name: tsenv
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+dependencies:
+  - cudatoolkit=11.0
+  - python=3.8.5
+  - pytorch
+  - torchvision
+  - tqdm
+  - easydict
+  - nltk
+  - scikit-image
+  - python-dateutil
+  - pip:

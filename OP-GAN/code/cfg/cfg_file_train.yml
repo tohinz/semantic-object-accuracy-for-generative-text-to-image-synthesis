@@ -1,7 +1,7 @@
 CONFIG_NAME: 'glu-gan2'
 
 DATASET_NAME: 'coco'
-DATA_DIR: '../data'
+DATA_DIR: 'data'
 GPU_ID: '0,1,2,3'
 WORKERS: 8
 
@@ -16,7 +16,7 @@ TRAIN:
     MAX_EPOCH: 120
     DISCRIMINATOR_LR: 0.0002
     GENERATOR_LR: 0.0002
-    NET_E: '../models/coco/text_encoder100.pth'
+    NET_E: 'models/coco/text_encoder100.pth'
     BBOX_LOSS: True
     OPTIMIZE_DATA_LOADING: True
     EMPTY_CACHE: True

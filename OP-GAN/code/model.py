@@ -234,7 +234,8 @@ class CNN_ENCODER(nn.Module):
 
         model = models.inception_v3()
         url = 'https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth'
-        model.load_state_dict(model_zoo.load_url(url))
+        state_dict = torch.hub.load_state_dict_from_url(url, model_dir='models/hub')
+        model.load_state_dict(state_dict)
         for param in model.parameters():
             param.requires_grad = False
         print('Load pretrained model from ', url)

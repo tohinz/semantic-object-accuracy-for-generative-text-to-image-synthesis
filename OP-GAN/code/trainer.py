@@ -303,8 +303,8 @@ class condGANTrainer(object):
             if cfg.CUDA:
                 noise, local_noise, fixed_noise = noise.cuda(), local_noise.cuda(), fixed_noise.cuda()
 
-        gen_iterations = 0
         for epoch in range(start_epoch, self.max_epoch):
+            gen_iterations = 0
             if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
                 data_iter = []
                 for _idx in range(len(self.data_loader)):
@@ -428,16 +428,19 @@ class condGANTrainer(object):
                     torch.cuda.empty_cache()
 
                 # save images
-                if 2*gen_iterations == self.num_batches \
-                        or 2*gen_iterations+1 == self.num_batches \
-                        or gen_iterations+1 == self.num_batches:
+                if (
+                        2 * gen_iterations == self.num_batches
+                        or 2 * gen_iterations + 1 == self.num_batches
+                        or gen_iterations + 1 == self.num_batches
+                ):
+                    print('\nSaving images...')
                     backup_para = copy_G_params(netG)
                     load_params(netG, avg_param_G)
                     if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
                         self.save_img_results(netG, fixed_noise[subset_idx], sent_emb,
-                                          words_embs, mask, image_encoder,
-                                          captions, cap_lens, epoch, transf_matrices_inv,
-                                          label_one_hot, local_noise[subset_idx], transf_matrices,
+                                              words_embs, mask, image_encoder,
+                                              captions, cap_lens, epoch, transf_matrices_inv,
+                                              label_one_hot, local_noise[subset_idx], transf_matrices,
                                           max_objects, subset_idx, name='average')
                     else:
                         self.save_img_results(netG, fixed_noise, sent_emb,
