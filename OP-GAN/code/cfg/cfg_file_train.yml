@@ -3,6 +3,7 @@ CONFIG_NAME: 'glu-gan2'
 DATASET_NAME: 'coco'
 DATA_DIR: 'data'
 WORKERS: 8
+DEBUG: False
 
 TREE:
     BRANCH_NUM: 3

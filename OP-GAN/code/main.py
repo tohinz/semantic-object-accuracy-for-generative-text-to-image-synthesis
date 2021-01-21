@@ -69,13 +69,6 @@ if __name__ == "__main__":
         cfg.DEVICE = torch.device('cuda:0')
     print('USING DEVICE %s' % cfg.DEVICE)
 
-    if args.data_dir != '':
-        cfg.DATA_DIR = args.data_dir
-    if args.net_g != "":
-        cfg.TRAIN.NET_G = args.net_g
-    print('Using config:')
-    pprint.pprint(cfg)
-
     if cfg.SEED == -1:
         cfg.SEED = random.randint(1, 10000)
     random.seed(cfg.SEED)
@@ -84,6 +77,13 @@ if __name__ == "__main__":
     if cfg.CUDA:
         torch.cuda.manual_seed_all(cfg.SEED)
     print("Using seed {}".format(cfg.SEED))
+
+    if args.data_dir != '':
+        cfg.DATA_DIR = args.data_dir
+    if args.net_g != "":
+        cfg.TRAIN.NET_G = args.net_g
+    print('Using config:')
+    pprint.pprint(cfg)
 
     if args.resume == "":
         resume = False
@@ -121,8 +121,12 @@ if __name__ == "__main__":
         dataloaders = []
         for max_objects in range(num_max_objects+1):
             subset = torch.utils.data.Subset(dataset, dataset_indices[max_objects])
+            subset_to_load = (
+                torch.utils.data.Subset(subset, list(range(cfg.DEBUG_NUM_DATAPOINTS // num_max_objects)))
+                if cfg.DEBUG else subset
+            )
             dataset_subsets.append(subset)
-            dataloader = torch.utils.data.DataLoader(subset, batch_size=cfg.TRAIN.BATCH_SIZE[max_objects],
+            dataloader = torch.utils.data.DataLoader(subset_to_load, batch_size=cfg.TRAIN.BATCH_SIZE[max_objects],
                                                      drop_last=True, shuffle=bshuffle, num_workers=int(cfg.WORKERS))
             dataloaders.append(dataloader)
 
@@ -132,8 +136,11 @@ if __name__ == "__main__":
         dataset = TextDataset(cfg.DATA_DIR, img_dir, split_dir, base_size=cfg.TREE.BASE_SIZE,
                               transform=image_transform, eval=eval, use_generated_bboxes=cfg.TRAIN.GENERATED_BBOXES)
         assert dataset
-        dataloader = torch.utils.data.DataLoader( dataset, batch_size=cfg.TRAIN.BATCH_SIZE[0],
-                                                  drop_last=True, shuffle=bshuffle, num_workers=int(cfg.WORKERS))
+        dataset_to_load = (
+            torch.utils.data.Subset(dataset, list(range(cfg.DEBUG_NUM_DATAPOINTS))) if cfg.DEBUG else dataset
+        )
+        dataloader = torch.utils.data.DataLoader(dataset_to_load, batch_size=cfg.TRAIN.BATCH_SIZE[0],
+                                                 drop_last=True, shuffle=bshuffle, num_workers=int(cfg.WORKERS))
 
         algo = trainer(output_dir, dataloader, dataset.n_words, dataset.ixtoword, resume)
 

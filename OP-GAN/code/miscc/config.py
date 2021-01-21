@@ -14,6 +14,8 @@ __C.OUTPUT_DIR = 'output'
 __C.CUDA = True
 __C.WORKERS = 6
 __C.SEED = -1
+__C.DEBUG = False
+__C.DEBUG_NUM_DATAPOINTS = 100
 
 __C.RNN_TYPE = 'LSTM'   # 'GRU'
 
