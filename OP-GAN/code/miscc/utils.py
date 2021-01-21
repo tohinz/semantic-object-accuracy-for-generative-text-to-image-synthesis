@@ -1,5 +1,8 @@
+import logging
 import os
 import errno
+import sys
+
 import numpy as np
 from torch.nn import init
 
@@ -371,3 +374,21 @@ class DataParallelPassThrough(nn.parallel.DataParallel):
             return super().__getattr__(name)
         except AttributeError:
             return getattr(self.module, name)
+
+
+def initialize_logging(output_dir, to_file=True):
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(message)s',
+                                  datefmt='%d-%m-%Y %H:%M:%S')
+    ch = logging.StreamHandler(stream=sys.stdout)
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    if to_file:
+        fh = logging.FileHandler(os.path.join(output_dir, 'output.log'))
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)

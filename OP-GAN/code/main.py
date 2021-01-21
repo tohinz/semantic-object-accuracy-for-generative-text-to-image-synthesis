@@ -1,7 +1,10 @@
 from __future__ import print_function
 
+import logging
+
 from miscc.config import cfg, cfg_from_file
 from datasets import TextDataset
+from miscc.utils import initialize_logging, mkdir_p
 from trainer import condGANTrainer as trainer
 
 import os
@@ -21,6 +24,8 @@ import torchvision.transforms as transforms
 
 dir_path = (os.path.abspath(os.path.join(os.path.realpath(__file__), './.')))
 sys.path.append(dir_path)
+
+logger = logging.getLogger()
 
 
 def parse_args():
@@ -61,14 +66,6 @@ if __name__ == "__main__":
     if args.cfg_file is not None:
         cfg_from_file(args.cfg_file)
 
-    if not (torch.cuda.is_available() and cfg.CUDA):
-        cfg.CUDA = False
-        cfg.DEVICE = torch.device('cpu')
-    else:
-        cfg.CUDA = True
-        cfg.DEVICE = torch.device('cuda:0')
-    print('USING DEVICE %s' % cfg.DEVICE)
-
     if cfg.SEED == -1:
         cfg.SEED = random.randint(1, 10000)
     random.seed(cfg.SEED)
@@ -76,14 +73,6 @@ if __name__ == "__main__":
     torch.manual_seed(cfg.SEED)
     if cfg.CUDA:
         torch.cuda.manual_seed_all(cfg.SEED)
-    print("Using seed {}".format(cfg.SEED))
-
-    if args.data_dir != '':
-        cfg.DATA_DIR = args.data_dir
-    if args.net_g != "":
-        cfg.TRAIN.NET_G = args.net_g
-    print('Using config:')
-    pprint.pprint(cfg)
 
     if args.resume == "":
         resume = False
@@ -91,10 +80,29 @@ if __name__ == "__main__":
         timestamp = now.strftime('%Y_%m_%d_%H_%M_%S')
         output_dir = os.path.join(cfg.OUTPUT_DIR, '%s_%s_%s_%s'
                                   % (cfg.DATASET_NAME, cfg.CONFIG_NAME, timestamp, cfg.SEED))
+        mkdir_p(output_dir)
     else:
         assert os.path.isdir(args.resume)
         resume = True
         output_dir = args.resume
+    initialize_logging(output_dir, to_file=True)
+    logger.info("Using output dir: %s" % output_dir)
+    logger.info("Using seed {}".format(cfg.SEED))
+
+    if not (torch.cuda.is_available() and cfg.CUDA):
+        cfg.CUDA = False
+        cfg.DEVICE = torch.device('cpu')
+    else:
+        cfg.CUDA = True
+        cfg.DEVICE = torch.device('cuda:0')
+    logger.info('USING DEVICE %s' % cfg.DEVICE)
+
+    if args.data_dir != '':
+        cfg.DATA_DIR = args.data_dir
+    if args.net_g != "":
+        cfg.TRAIN.NET_G = args.net_g
+    logger.info('Using config: ')
+    pprint.pprint(cfg)
 
     split_dir, bshuffle = 'train', True
     eval = False
@@ -157,7 +165,7 @@ if __name__ == "__main__":
             copyfile(args.cfg_file, os.path.join(output_dir, "cfg_file_train.yml"))
         algo.train()
         end_t = time.time()
-        print('Total time for training:', end_t - start_t)
+        logger.info('Total time for training: %s', end_t - start_t)
     else:
         '''generate images from pre-extracted embeddings'''
         assert not cfg.TRAIN.OPTIMIZE_DATA_LOADING, "\"cfg.TRAIN.OPTIMIZE_DATA_LOADING\" " \

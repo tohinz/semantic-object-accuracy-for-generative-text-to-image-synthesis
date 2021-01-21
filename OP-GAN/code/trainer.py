@@ -1,4 +1,7 @@
 from __future__ import print_function
+
+import logging
+
 from six.moves import range
 
 import torch
@@ -23,6 +26,8 @@ from model import RNN_ENCODER, CNN_ENCODER
 
 from miscc.losses import words_loss
 from miscc.losses import discriminator_loss, generator_loss, KL_loss
+
+logger = logging.getLogger()
 
 
 # ################# Text to image task############################ #
@@ -69,7 +74,7 @@ class condGANTrainer(object):
         image_encoder.load_state_dict(state_dict)
         for p in image_encoder.parameters():
             p.requires_grad = False
-        print('Load image encoder from:', img_encoder_path)
+        logger.info('Load image encoder from: %s', img_encoder_path)
         image_encoder.eval()
 
         text_encoder = RNN_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
@@ -77,7 +82,7 @@ class condGANTrainer(object):
         text_encoder.load_state_dict(state_dict)
         for p in text_encoder.parameters():
             p.requires_grad = False
-        print('Load text encoder from:', cfg.TRAIN.NET_E)
+        logger.info('Load text encoder from: %s', cfg.TRAIN.NET_E)
         text_encoder.eval()
 
         # #######################generator and discriminators############## #
@@ -94,9 +99,9 @@ class condGANTrainer(object):
         netG.apply(weights_init)
         for i in range(len(netsD)):
             netsD[i].apply(weights_init)
-        print('# of params in netG: %s' % count_learnable_params(netG))
-        print('# of netsD', len(netsD))
-        print('# of params in netsD: %s' % [count_learnable_params(netD) for netD in netsD])
+        logger.info('# of params in netG: %s' % count_learnable_params(netG))
+        logger.info('# of netsD: %s', len(netsD))
+        logger.info('# of params in netsD: %s' % [count_learnable_params(netD) for netD in netsD])
         epoch = 0
 
         if self.resume:
@@ -108,13 +113,13 @@ class condGANTrainer(object):
             for i in range(len(netsD)):
                 netsD[i].load_state_dict(state_dict["netD"][i])
             epoch = int(latest_checkpoint[-8:-4]) + 1
-            print("Resuming training from checkpoint {} at epoch {}.".format(latest_checkpoint, epoch))
+            logger.info("Resuming training from checkpoint {} at epoch {}.".format(latest_checkpoint, epoch))
 
         #
         if cfg.TRAIN.NET_G != '':
             state_dict = torch.load(cfg.TRAIN.NET_G, map_location=lambda storage, loc: storage)
             netG.load_state_dict(state_dict)
-            print('Load G from: ', cfg.TRAIN.NET_G)
+            logger.info('Load G from: %s', cfg.TRAIN.NET_G)
             istart = cfg.TRAIN.NET_G.rfind('_') + 1
             iend = cfg.TRAIN.NET_G.rfind('.')
             epoch = cfg.TRAIN.NET_G[istart:iend]
@@ -124,7 +129,7 @@ class condGANTrainer(object):
                 for i in range(len(netsD)):
                     s_tmp = Gname[:Gname.rfind('/')]
                     Dname = '%s/netD%d.pth' % (s_tmp, i)
-                    print('Load D from: ', Dname)
+                    logger.info('Load D from: %s', Dname)
                     state_dict = torch.load(Dname, map_location=lambda storage, loc: storage)
                     netsD[i].load_state_dict(state_dict)
         # ########################################################### #
@@ -198,7 +203,7 @@ class condGANTrainer(object):
             'netD': netDs_state_dicts,
             'optimD': optimDs_state_dicts}
         torch.save(checkpoint, "{}/checkpoint_{:04}.pth".format(self.model_dir, epoch))
-        print('Save G/D models')
+        logger.info('Save G/D models')
 
         load_params(netG, backup_para)
 
@@ -290,7 +295,7 @@ class condGANTrainer(object):
             fixed_noise = Variable(torch.FloatTensor(batch_size, cfg.GAN.GLOBAL_Z_DIM).normal_(0, 1)).to(cfg.DEVICE)
 
         for epoch in range(start_epoch, self.max_epoch):
-            print("Epoch nb: %s" % epoch)
+            logger.info("Epoch nb: %s" % epoch)
             gen_iterations = 0
             if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
                 data_iter = []
@@ -422,7 +427,7 @@ class condGANTrainer(object):
                         or 2 * gen_iterations + 1 == self.num_batches
                         or gen_iterations + 1 == self.num_batches
                 ):
-                    print('\nSaving images...')
+                    logger.info('Saving images...')
                     backup_para = copy_G_params(netG)
                     load_params(netG, avg_param_G)
                     if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
@@ -444,7 +449,7 @@ class condGANTrainer(object):
 
     def sampling(self, split_dir, num_samples=30000):
         if cfg.TRAIN.NET_G == '':
-            print('Error: the path for morels is not found!')
+            logger.error('Error: the path for morels is not found!')
         else:
             if split_dir == 'test':
                 split_dir = 'valid'
@@ -462,7 +467,7 @@ class condGANTrainer(object):
             text_encoder.load_state_dict(state_dict)
             text_encoder = text_encoder.to(cfg.DEVICE)
             text_encoder.eval()
-            print('Loaded text encoder from:', cfg.TRAIN.NET_E)
+            logger.info('Loaded text encoder from: %s', cfg.TRAIN.NET_E)
 
             batch_size = self.batch_size[0]
             nz = cfg.GAN.GLOBAL_Z_DIM
@@ -473,13 +478,13 @@ class condGANTrainer(object):
             state_dict = torch.load(model_dir, map_location=lambda storage, loc: storage)
             netG.load_state_dict(state_dict["netG"])
             max_objects = 10
-            print('Load G from: ', model_dir)
+            logger.info('Load G from: %s', model_dir)
 
             # the path to save generated images
             s_tmp = model_dir[:model_dir.rfind('.pth')].split("/")[-1]
             save_dir = '%s/%s/%s' % ("../output", s_tmp, split_dir)
             mkdir_p(save_dir)
-            print("Saving images to: {}".format(save_dir))
+            logger.info("Saving images to: {}".format(save_dir))
 
             number_batches = num_samples // batch_size
             if number_batches < 1:
@@ -520,7 +525,7 @@ class condGANTrainer(object):
                     s_tmp = '%s/%s' % (save_dir, keys[j])
                     folder = s_tmp[:s_tmp.rfind('/')]
                     if not os.path.isdir(folder):
-                        print('Make a new folder: ', folder)
+                        logger.info('Make a new folder: %s', folder)
                         mkdir_p(folder)
                     k = -1
                     # for k in range(len(fake_imgs)):

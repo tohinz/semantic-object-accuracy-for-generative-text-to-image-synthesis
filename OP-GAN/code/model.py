@@ -1,3 +1,5 @@
+import logging
+
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -9,6 +11,8 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from miscc.config import cfg
 from GlobalAttention import GlobalAttentionGeneral as ATT_NET
+
+logger = logging.getLogger()
 
 
 def stn(image, transformation_matrix, size):
@@ -238,8 +242,8 @@ class CNN_ENCODER(nn.Module):
         model.load_state_dict(state_dict)
         for param in model.parameters():
             param.requires_grad = False
-        print('Load pretrained model from ', url)
-        # print(model)
+        logger.info('Load pretrained model from %s', url)
+        # logger.info(model)
 
         self.define_module(model)
         self.init_trainable_weights()
@@ -493,10 +497,10 @@ class NEXT_STAGE_G(nn.Module):
                 current_label = current_label.view(h_code.shape[0], self.label_dim, 1, 1)
                 current_label = current_label.repeat(1, 1, _hw//4, _hw//4)
                 current_patch = stn(h_code, transf_matrices[:, idx], (h_code.shape[0], h_code.shape[1], _hw//4, _hw//4))
-                # print(current_label.shape)
-                # print(current_patch.shape)
+                # logger.info(current_label.shape)
+                # logger.info(current_patch.shape)
                 current_input = torch.cat((current_patch, current_label), 1)
-                # print(current_input.shape)
+                # logger.info(current_input.shape)
                 h_code_local = self.local1(current_input)
                 h_code_local = self.local2(h_code_local)
                 h_code_local = stn(h_code_local, transf_matrices_inv[:, idx], h_code_locals.shape)

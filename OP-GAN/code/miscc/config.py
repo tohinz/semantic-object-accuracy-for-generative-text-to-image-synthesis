@@ -1,8 +1,12 @@
 from __future__ import division
 from __future__ import print_function
 
+import logging
+
 import numpy as np
 from easydict import EasyDict as edict
+
+logger = logging.getLogger()
 
 __C = edict()
 cfg = __C
@@ -94,7 +98,7 @@ def _merge_a_into_b(a, b):
             try:
                 _merge_a_into_b(a[k], b[k])
             except:
-                print('Error under config key: {}'.format(k))
+                logger.info('Error under config key: {}'.format(k))
                 raise
         else:
             b[k] = v
