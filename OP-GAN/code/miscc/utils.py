@@ -112,8 +112,7 @@ def build_super_images(real_imgs, captions, ixtoword,
         text_convas[:, istart:iend, :] = COLOR_DIC[i]
 
 
-    real_imgs = \
-        nn.Upsample(size=(vis_size, vis_size), mode='bilinear')(real_imgs)
+    real_imgs = nn.Upsample(size=(vis_size, vis_size), mode='bilinear', align_corners=False)(real_imgs)
     # [-1, 1] --> [0, 1]
     real_imgs.add_(1).div_(2).mul_(255)
     real_imgs = real_imgs.data.numpy()
@@ -123,8 +122,7 @@ def build_super_images(real_imgs, captions, ixtoword,
     middle_pad = np.zeros([pad_sze[2], 2, 3])
     post_pad = np.zeros([pad_sze[1], pad_sze[2], 3])
     if lr_imgs is not None:
-        lr_imgs = \
-            nn.Upsample(size=(vis_size, vis_size), mode='bilinear')(lr_imgs)
+        lr_imgs = nn.Upsample(size=(vis_size, vis_size), mode='bilinear', align_corners=False)(lr_imgs)
         # [-1, 1] --> [0, 1]
         lr_imgs.add_(1).div_(2).mul_(255)
         lr_imgs = lr_imgs.data.numpy()
@@ -224,7 +222,7 @@ def build_super_images2(real_imgs, captions, cap_lens, ixtoword,
                            dtype=np.uint8)
 
     real_imgs = \
-        nn.Upsample(size=(vis_size, vis_size), mode='bilinear')(real_imgs)
+        nn.Upsample(size=(vis_size, vis_size), mode='bilinear', align_corners=False)(real_imgs)
     # [-1, 1] --> [0, 1]
     real_imgs.add_(1).div_(2).mul_(255)
     real_imgs = real_imgs.data.numpy()

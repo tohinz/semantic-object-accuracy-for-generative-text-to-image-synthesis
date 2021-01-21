@@ -16,8 +16,8 @@ logger = logging.getLogger()
 
 
 def stn(image, transformation_matrix, size):
-    grid = torch.nn.functional.affine_grid(transformation_matrix, torch.Size(size))
-    out_image = torch.nn.functional.grid_sample(image, grid)
+    grid = torch.nn.functional.affine_grid(transformation_matrix, torch.Size(size), align_corners=False)
+    out_image = torch.nn.functional.grid_sample(image, grid, align_corners=False)
 
     return out_image
 
@@ -163,6 +163,10 @@ class RNN_ENCODER(nn.Module):
         self.init_weights()
 
     def define_module(self):
+        """
+        nn.LSTM and nn.GRU will give a warning if nlayers=1 and dropout>0, saying dropout is only used
+            when nlayers>1. That's okay.
+        """
         self.encoder = nn.Embedding(self.ntoken, self.ninput)
         self.drop = nn.Dropout(self.drop_prob)
         if self.rnn_type == 'LSTM':
@@ -278,7 +282,7 @@ class CNN_ENCODER(nn.Module):
         features = None
         # --> fixed-size input: batch x 3 x 299 x 299
         # x = nn.functional.interpolate(x, size=(299, 299), mode='bilinear')
-        x = nn.Upsample(size=(299, 299), mode='bilinear')(x)
+        x = nn.Upsample(size=(299, 299), mode='bilinear', align_corners=False)(x)
         # 299 x 299 x 3
         x = self.Conv2d_1a_3x3(x)
         # 149 x 149 x 32
