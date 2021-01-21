@@ -66,12 +66,8 @@ def get_imgs(img_path, imsize, max_objects, bbox=None, transform=None, normalize
         ret = [normalize(img)]
     else:
         for i in range(cfg.TREE.BRANCH_NUM):
-            # print(imsize[i])
-            if i < (cfg.TREE.BRANCH_NUM - 1):
-                re_img = transforms.ToPILImage()(img)
-                re_img = transforms.Resize((imsize[i], imsize[i]))(re_img)
-            else:
-                re_img = transforms.ToPILImage()(img)
+            re_img = transforms.ToPILImage()(img)
+            re_img = transforms.Resize((imsize[i], imsize[i]))(re_img)
             ret.append(normalize(re_img))
 
     return ret, bbox_scaled
@@ -359,7 +355,7 @@ class TextDataset(data.Dataset):
 
         img_name = '%s/%s.jpg' % (self.img_dir, key)
         imgs, bbox_scaled = get_imgs(img_name, self.imsize, self.max_objects,
-                            bbox, self.transform, normalize=self.norm)
+                                     bbox, self.transform, normalize=self.norm)
 
         transformation_matrices = self.get_transformation_matrices(bbox_scaled)
 
