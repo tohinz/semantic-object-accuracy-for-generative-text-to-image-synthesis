@@ -416,7 +416,7 @@ class condGANTrainer(object):
                 errG_total.backward()
                 optimizerG.step()
                 for p, avg_p in zip(netG.parameters(), avg_param_G):
-                    avg_p.mul_(0.999).add_(0.001, p.data)
+                    avg_p.mul_(0.999).add_(p.data, alpha=0.001)
 
                 if cfg.TRAIN.EMPTY_CACHE:
                     torch.cuda.empty_cache()
