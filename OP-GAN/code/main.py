@@ -76,19 +76,21 @@ if __name__ == "__main__":
     print('Using config:')
     pprint.pprint(cfg)
 
-    args.manualSeed = random.randint(1, 10000)
-    random.seed(args.manualSeed)
-    np.random.seed(args.manualSeed)
-    torch.manual_seed(args.manualSeed)
+    if cfg.SEED == -1:
+        cfg.SEED = random.randint(1, 10000)
+    random.seed(cfg.SEED)
+    np.random.seed(cfg.SEED)
+    torch.manual_seed(cfg.SEED)
     if cfg.CUDA:
-        torch.cuda.manual_seed_all(args.manualSeed)
-    print("Using seed {}".format(args.manualSeed))
+        torch.cuda.manual_seed_all(cfg.SEED)
+    print("Using seed {}".format(cfg.SEED))
 
     if args.resume == "":
         resume = False
         now = datetime.datetime.now(dateutil.tz.tzlocal())
         timestamp = now.strftime('%Y_%m_%d_%H_%M_%S')
-        output_dir = os.path.join(cfg.OUTPUT_DIR, '%s_%s_%s' % (cfg.DATASET_NAME, cfg.CONFIG_NAME, timestamp))
+        output_dir = os.path.join(cfg.OUTPUT_DIR, '%s_%s_%s_%s'
+                                  % (cfg.DATASET_NAME, cfg.CONFIG_NAME, timestamp, cfg.SEED))
     else:
         assert os.path.isdir(args.resume)
         resume = True

@@ -11,9 +11,9 @@ __C.DATASET_NAME = 'coco'
 __C.CONFIG_NAME = ''
 __C.DATA_DIR = 'data'
 __C.OUTPUT_DIR = 'output'
-__C.GPU_ID = '0'
 __C.CUDA = True
 __C.WORKERS = 6
+__C.SEED = -1
 
 __C.RNN_TYPE = 'LSTM'   # 'GRU'
 
