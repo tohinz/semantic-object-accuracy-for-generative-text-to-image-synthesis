@@ -354,3 +354,20 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+
+class DataParallelPassThrough(nn.parallel.DataParallel):
+    """
+    Use this so the following still works.
+    >>> net = SomeModule(10, 20)
+    >>> print(net.some_sub_module)
+    >>> net = DistributedDataParallelPassthrough(net)
+    >>> print(net.some_sub_module)
+    While otherwise, with `nn.parallel.DataParallel`, this would give a ModuleAttributeError.
+    https://github.com/pytorch/pytorch/issues/16885
+    """
+    def __getattr__(self, name):
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return getattr(self.module, name)

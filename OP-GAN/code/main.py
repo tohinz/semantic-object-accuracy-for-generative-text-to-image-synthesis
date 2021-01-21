@@ -26,7 +26,6 @@ sys.path.append(dir_path)
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a AttnGAN network')
     parser.add_argument('--cfg', dest='cfg_file', help='config file', type=str)
-    parser.add_argument('--gpu', dest='gpu_id', type=str, default='0,1,2,3')
     parser.add_argument('--resume', dest='resume', type=str, default='')
     parser.add_argument('--data_dir', dest='data_dir', type=str, default='')
     parser.add_argument('--net_g', dest='net_g', type=str, default='')
@@ -62,10 +61,13 @@ if __name__ == "__main__":
     if args.cfg_file is not None:
         cfg_from_file(args.cfg_file)
 
-    if args.gpu_id != -1:
-        cfg.GPU_ID = args.gpu_id
-    else:
+    if not (torch.cuda.is_available() and cfg.CUDA):
         cfg.CUDA = False
+        cfg.DEVICE = torch.device('cpu')
+    else:
+        cfg.CUDA = True
+        cfg.DEVICE = torch.device('cuda:0')
+    print('USING DEVICE %s' % cfg.DEVICE)
 
     if args.data_dir != '':
         cfg.DATA_DIR = args.data_dir

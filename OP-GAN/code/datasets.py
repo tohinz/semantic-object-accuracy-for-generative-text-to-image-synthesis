@@ -8,18 +8,15 @@ from nltk.tokenize import RegexpTokenizer
 from collections import defaultdict
 from miscc.config import cfg
 
-import torch
 import torch.utils.data as data
 from torch.autograd import Variable
 import torchvision.transforms as transforms
 
-import os
-import numpy as np
-from PIL import Image
 import numpy.random as random
 import pickle
 
 from miscc.utils import *
+
 
 def prepare_data(data, eval=False):
     if eval:
@@ -28,16 +25,12 @@ def prepare_data(data, eval=False):
         imgs, captions, captions_lens, class_ids, keys, transformation_matrices, label = data
 
     # sort data by the length in a decreasing order
-    sorted_cap_lens, sorted_cap_indices = \
-        torch.sort(captions_lens, 0, True)
+    sorted_cap_lens, sorted_cap_indices = torch.sort(captions_lens, 0, True)
 
     real_imgs = []
     for i in range(len(imgs)):
         imgs[i] = imgs[i][sorted_cap_indices]
-        if cfg.CUDA:
-            real_imgs.append(Variable(imgs[i]).cuda().detach())
-        else:
-            real_imgs.append(Variable(imgs[i]).detach())
+        real_imgs.append(Variable(imgs[i]).to(cfg.DEVICE).detach())
 
     captions = captions[sorted_cap_indices].squeeze()
     class_ids = class_ids[sorted_cap_indices].numpy()
