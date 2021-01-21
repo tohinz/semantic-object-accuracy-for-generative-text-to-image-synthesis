@@ -29,7 +29,7 @@ def sent_loss(cnn_code, rnn_code, labels, class_ids,
             masks.append(mask.reshape((1, -1)))
         masks = np.concatenate(masks, 0)
         # masks: batch_size x batch_size
-        masks = torch.ByteTensor(masks).to(cfg.DEVICE)
+        masks = torch.BoolTensor(masks).to(cfg.DEVICE)
 
     # --> seq_len x batch_size x nef
     if cnn_code.dim() == 2:
@@ -114,7 +114,7 @@ def words_loss(img_features, words_emb, labels,
     if class_ids is not None:
         masks = np.concatenate(masks, 0)
         # masks: batch_size x batch_size
-        masks = torch.ByteTensor(masks).to(cfg.DEVICE)
+        masks = torch.BoolTensor(masks).to(cfg.DEVICE)
 
     similarities = similarities * cfg.TRAIN.SMOOTH.GAMMA3
     if class_ids is not None:
