@@ -236,7 +236,7 @@ class CNN_ENCODER(nn.Module):
         else:
             self.feat_dim = cfg.TEXT.EMBEDDING_DIM
 
-        model = models.inception_v3()
+        model = models.inception_v3(init_weights=False)
         url = 'https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth'
         state_dict = torch.hub.load_state_dict_from_url(url, model_dir='models/hub')
         model.load_state_dict(state_dict)
