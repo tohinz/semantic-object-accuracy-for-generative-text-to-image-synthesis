@@ -346,8 +346,8 @@ class TextDataset(data.Dataset):
         labels = torch.from_numpy(label)
         labels = labels.long()
         # remove -1 to enable one-hot converting
-        labels[labels < 0] = 80
-        label_one_hot = torch.FloatTensor(labels.shape[0], 81).fill_(0)
+        labels[labels < 0] = cfg.TEXT.CLASSES_NUM - 1
+        label_one_hot = torch.FloatTensor(labels.shape[0], cfg.TEXT.CLASSES_NUM).fill_(0)
         label_one_hot = label_one_hot.scatter_(1, labels, 1).float()
 
         return label_one_hot

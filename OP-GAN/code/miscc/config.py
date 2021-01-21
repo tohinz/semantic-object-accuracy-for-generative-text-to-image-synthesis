@@ -1,7 +1,6 @@
 from __future__ import division
 from __future__ import print_function
 
-import os.path as osp
 import numpy as np
 from easydict import EasyDict as edict
 
@@ -47,18 +46,23 @@ __C.TRAIN.SMOOTH.LAMBDA = 1.0
 
 # Modal options
 __C.GAN = edict()
-__C.GAN.DF_DIM = 64
-__C.GAN.GF_DIM = 128
-__C.GAN.Z_DIM = 100
-__C.GAN.CONDITION_DIM = 100
-__C.GAN.R_NUM = 2
+__C.GAN.DISC_FEAT_DIM = 96
+__C.GAN.GEN_FEAT_DIM = 48
+__C.GAN.GLOBAL_Z_DIM = 100
+__C.GAN.LOCAL_Z_DIM = 32
+__C.GAN.TEXT_CONDITION_DIM = 100
+__C.GAN.INIT_LABEL_DIM = 100
+__C.GAN.NEXT_LABEL_DIM = 256 // 2
+__C.GAN.RESIDUAL_NUM = 3
 __C.GAN.B_ATTENTION = True
 __C.GAN.B_DCGAN = False
+__C.GAN.LAYOUT_SPATIAL_DIM = 16
 
 __C.TEXT = edict()
 __C.TEXT.CAPTIONS_PER_IMAGE = 10
 __C.TEXT.EMBEDDING_DIM = 256
-__C.TEXT.WORDS_NUM = 18
+__C.TEXT.WORDS_NUM = 12
+__C.TEXT.CLASSES_NUM = 81
 
 
 def _merge_a_into_b(a, b):

@@ -286,11 +286,10 @@ class condGANTrainer(object):
         if cfg.TRAIN.OPTIMIZE_DATA_LOADING:
             batch_sizes = self.batch_size
             noise, local_noise, fixed_noise = [], [], []
-            nz = cfg.GAN.Z_DIM
             for batch_size in batch_sizes:
-                noise.append(Variable(torch.FloatTensor(batch_size, nz)))
-                local_noise.append(Variable(torch.FloatTensor(batch_size, 32)))
-                fixed_noise.append(Variable(torch.FloatTensor(batch_size, nz).normal_(0, 1)))
+                noise.append(Variable(torch.FloatTensor(batch_size, cfg.GAN.GLOBAL_Z_DIM)))
+                local_noise.append(Variable(torch.FloatTensor(batch_size, cfg.GAN.LOCAL_Z_DIM)))
+                fixed_noise.append(Variable(torch.FloatTensor(batch_size, cfg.GAN.GLOBAL_Z_DIM).normal_(0, 1)))
             if cfg.CUDA:
                 for idx in range(len(batch_sizes)):
                     noise[idx] = noise[idx].cuda()
@@ -298,10 +297,9 @@ class condGANTrainer(object):
                     fixed_noise[idx] = fixed_noise[idx].cuda()
         else:
             batch_size = self.batch_size[0]
-            nz = cfg.GAN.Z_DIM
-            noise = Variable(torch.FloatTensor(batch_size, nz))
-            local_noise = Variable(torch.FloatTensor(batch_size, 32))
-            fixed_noise = Variable(torch.FloatTensor(batch_size, nz).normal_(0, 1))
+            noise = Variable(torch.FloatTensor(batch_size, cfg.GAN.GLOBAL_Z_DIM))
+            local_noise = Variable(torch.FloatTensor(batch_size, cfg.GAN.LOCAL_Z_DIM))
+            fixed_noise = Variable(torch.FloatTensor(batch_size, cfg.GAN.GLOBAL_Z_DIM).normal_(0, 1))
             if cfg.CUDA:
                 noise, local_noise, fixed_noise = noise.cuda(), local_noise.cuda(), fixed_noise.cuda()
 
@@ -478,9 +476,9 @@ class condGANTrainer(object):
             print('Loaded text encoder from:', cfg.TRAIN.NET_E)
 
             batch_size = self.batch_size[0]
-            nz = cfg.GAN.Z_DIM
+            nz = cfg.GAN.GLOBAL_Z_DIM
             noise = Variable(torch.FloatTensor(batch_size, nz)).cuda()
-            local_noise = Variable(torch.FloatTensor(batch_size, 32)).cuda()
+            local_noise = Variable(torch.FloatTensor(batch_size, cfg.GAN.LOCAL_Z_DIM)).cuda()
 
             model_dir = cfg.TRAIN.NET_G
             state_dict = torch.load(model_dir, map_location=lambda storage, loc: storage)
