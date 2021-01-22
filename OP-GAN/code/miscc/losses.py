@@ -29,9 +29,7 @@ def sent_loss(cnn_code, rnn_code, labels, class_ids,
             masks.append(mask.reshape((1, -1)))
         masks = np.concatenate(masks, 0)
         # masks: batch_size x batch_size
-        masks = torch.ByteTensor(masks)
-        if cfg.CUDA:
-            masks = masks.cuda()
+        masks = torch.BoolTensor(masks).to(cfg.DEVICE)
 
     # --> seq_len x batch_size x nef
     if cnn_code.dim() == 2:
@@ -116,9 +114,7 @@ def words_loss(img_features, words_emb, labels,
     if class_ids is not None:
         masks = np.concatenate(masks, 0)
         # masks: batch_size x batch_size
-        masks = torch.ByteTensor(masks)
-        if cfg.CUDA:
-            masks = masks.cuda()
+        masks = torch.BoolTensor(masks).to(cfg.DEVICE)
 
     similarities = similarities * cfg.TRAIN.SMOOTH.GAMMA3
     if class_ids is not None:
@@ -133,11 +129,8 @@ def words_loss(img_features, words_emb, labels,
 
 
 # ##################Loss for G and Ds##############################
-def data_parallel(net, inputs, gpus):
-    return nn.parallel.data_parallel(net, inputs, gpus)
-
 def discriminator_loss(netD, real_imgs, fake_imgs, conditions,
-                       real_labels, fake_labels, gpus, local_labels=None,
+                       real_labels, fake_labels, local_labels=None,
                        transf_matrices=None, transf_matrices_inv=None, cfg=None, max_objects=None):
     # Forward
     criterion = nn.BCELoss()
@@ -145,41 +138,43 @@ def discriminator_loss(netD, real_imgs, fake_imgs, conditions,
         inputs = (real_imgs, local_labels, transf_matrices, transf_matrices_inv, max_objects)
     else:
         inputs = (real_imgs)
-    real_features = nn.parallel.data_parallel(netD, inputs, gpus)
+    real_features = netD(*inputs)
     if local_labels is not None:
         inputs = (fake_imgs.detach(), local_labels, transf_matrices, transf_matrices_inv, max_objects)
     else:
         inputs = (fake_imgs.detach())
-    fake_features = nn.parallel.data_parallel(netD, inputs, gpus)
+    fake_features = netD(*inputs)
 
     if cfg.TRAIN.BBOX_LOSS:
         if local_labels is not None:
-            inputs = (fake_imgs.detach(), local_labels, torch.flip(transf_matrices, [0]), torch.flip(transf_matrices_inv, [0]), max_objects)
+            inputs = (fake_imgs.detach(), local_labels, torch.flip(transf_matrices, [0]),
+                      torch.flip(transf_matrices_inv, [0]), max_objects)
         else:
             inputs = (fake_imgs.detach())
-        real_features_wrong_bbox = nn.parallel.data_parallel(netD, inputs, gpus)
+        real_features_wrong_bbox = netD(*inputs)
     # loss
-    cond_real_logits = data_parallel(netD.COND_DNET, (real_features, conditions), gpus)
+    cond_real_logits = netD.COND_DNET(real_features, conditions)
     cond_real_errD = criterion(cond_real_logits, real_labels)
-    cond_fake_logits = data_parallel(netD.COND_DNET, (fake_features, conditions), gpus)
+    cond_fake_logits = netD.COND_DNET(fake_features, conditions)
     cond_fake_errD = criterion(cond_fake_logits, fake_labels)
 
     batch_size = real_features.size(0)
-    cond_wrong_logits = data_parallel(netD.COND_DNET, (real_features[:(batch_size - 1)], conditions[1:batch_size]), gpus)
+    cond_wrong_logits = netD.COND_DNET(real_features[:(batch_size - 1)],
+                                       conditions[1:batch_size])
     cond_wrong_errD = criterion(cond_wrong_logits, fake_labels[1:batch_size])
 
-    #
     if cfg.TRAIN.BBOX_LOSS:
-        cond_wrong_bbox = data_parallel(netD.COND_DNET, (real_features_wrong_bbox, conditions), gpus)
+        cond_wrong_bbox = netD.COND_DNET(real_features_wrong_bbox,
+                                         conditions)
         cond_wrong_bbox_errD = criterion(cond_wrong_bbox, fake_labels)
 
     if netD.UNCOND_DNET is not None:
-        real_logits = data_parallel(netD.UNCOND_DNET, (real_features), gpus)
-        fake_logits = data_parallel(netD.UNCOND_DNET, (fake_features), gpus)
+        real_logits = netD.UNCOND_DNET(real_features)
+        fake_logits = netD.UNCOND_DNET(fake_features)
         real_errD = criterion(real_logits, real_labels)
         fake_errD = criterion(fake_logits, fake_labels)
         if cfg.TRAIN.BBOX_LOSS:
-            wrong_bbox_logits = data_parallel(netD.UNCOND_DNET, (real_features_wrong_bbox), gpus)
+            wrong_bbox_logits = netD.UNCOND_DNET(real_features_wrong_bbox)
             wrong_bbox_errD = criterion(wrong_bbox_logits, fake_labels)
             errD = ((real_errD + cond_real_errD) / 2. +
                     (fake_errD + cond_fake_errD + cond_wrong_errD + cond_wrong_bbox_errD + wrong_bbox_errD) / 5.)
@@ -197,7 +192,7 @@ def discriminator_loss(netD, real_imgs, fake_imgs, conditions,
 
 def generator_loss(netsD, image_encoder, fake_imgs, real_labels,
                    words_embs, sent_emb, match_labels,
-                   cap_lens, class_ids, gpus, local_labels=None,
+                   cap_lens, class_ids, local_labels=None,
                    transf_matrices=None, transf_matrices_inv=None, max_objects=None):
     numDs = len(netsD)
     batch_size = real_labels.size(0)
@@ -206,11 +201,11 @@ def generator_loss(netsD, image_encoder, fake_imgs, real_labels,
     errG_total = 0
     for i in range(numDs):
         inputs = (fake_imgs[i], local_labels, transf_matrices, transf_matrices_inv, max_objects)
-        features = nn.parallel.data_parallel(netsD[i], inputs, gpus)
-        cond_logits = data_parallel(netsD[i].COND_DNET, (features, sent_emb), gpus)
+        features = netsD[i](*inputs)
+        cond_logits = netsD[i].COND_DNET(features, sent_emb)
         cond_errG = criterion(cond_logits, real_labels)
         if netsD[i].UNCOND_DNET is not None:
-            logits = data_parallel(netsD[i].UNCOND_DNET, (features), gpus)
+            logits = netsD[i].UNCOND_DNET(features)
             errG = criterion(logits, real_labels)
             g_loss = errG + cond_errG
         else:

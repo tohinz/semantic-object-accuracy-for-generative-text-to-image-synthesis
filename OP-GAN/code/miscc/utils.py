@@ -1,5 +1,8 @@
+import logging
 import os
 import errno
+import sys
+
 import numpy as np
 from torch.nn import init
 
@@ -66,8 +69,8 @@ def drawCaption(convas, captions, ixtoword, vis_size, off1=2, off2=2):
     num = captions.size(0)
     img_txt = Image.fromarray(convas)
     # get a font
-    # fnt = None  # ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 50)
-    fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 50)
+    # fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 50)
+    fnt = ImageFont.load_default()
     # get a drawing context
     d = ImageDraw.Draw(img_txt)
     sentence_list = []
@@ -87,9 +90,9 @@ def drawCaption(convas, captions, ixtoword, vis_size, off1=2, off2=2):
 
 def build_super_images(real_imgs, captions, ixtoword,
                        attn_maps, att_sze, lr_imgs=None,
-                       batch_size=cfg.TRAIN.BATCH_SIZE,
+                       batch_size=cfg.TRAIN.BATCH_SIZE[0],
                        max_word_num=cfg.TEXT.WORDS_NUM):
-    nvis = 8
+    nvis = min(8, len(attn_maps))
     real_imgs = real_imgs[:nvis]
     if lr_imgs is not None:
         lr_imgs = lr_imgs[:nvis]
@@ -109,8 +112,7 @@ def build_super_images(real_imgs, captions, ixtoword,
         text_convas[:, istart:iend, :] = COLOR_DIC[i]
 
 
-    real_imgs = \
-        nn.Upsample(size=(vis_size, vis_size), mode='bilinear')(real_imgs)
+    real_imgs = nn.Upsample(size=(vis_size, vis_size), mode='bilinear', align_corners=False)(real_imgs)
     # [-1, 1] --> [0, 1]
     real_imgs.add_(1).div_(2).mul_(255)
     real_imgs = real_imgs.data.numpy()
@@ -120,8 +122,7 @@ def build_super_images(real_imgs, captions, ixtoword,
     middle_pad = np.zeros([pad_sze[2], 2, 3])
     post_pad = np.zeros([pad_sze[1], pad_sze[2], 3])
     if lr_imgs is not None:
-        lr_imgs = \
-            nn.Upsample(size=(vis_size, vis_size), mode='bilinear')(lr_imgs)
+        lr_imgs = nn.Upsample(size=(vis_size, vis_size), mode='bilinear', align_corners=False)(lr_imgs)
         # [-1, 1] --> [0, 1]
         lr_imgs.add_(1).div_(2).mul_(255)
         lr_imgs = lr_imgs.data.numpy()
@@ -164,7 +165,8 @@ def build_super_images(real_imgs, captions, ixtoword,
             if (vis_size // att_sze) > 1:
                 one_map = \
                     skimage.transform.pyramid_expand(one_map, sigma=20,
-                                                     upscale=vis_size // att_sze)
+                                                     upscale=vis_size // att_sze,
+                                                     multichannel=True)
             row_beforeNorm.append(one_map)
             minV = one_map.min()
             maxV = one_map.max()
@@ -220,7 +222,7 @@ def build_super_images2(real_imgs, captions, cap_lens, ixtoword,
                            dtype=np.uint8)
 
     real_imgs = \
-        nn.Upsample(size=(vis_size, vis_size), mode='bilinear')(real_imgs)
+        nn.Upsample(size=(vis_size, vis_size), mode='bilinear', align_corners=False)(real_imgs)
     # [-1, 1] --> [0, 1]
     real_imgs.add_(1).div_(2).mul_(255)
     real_imgs = real_imgs.data.numpy()
@@ -341,6 +343,10 @@ def copy_G_params(model):
     return flatten
 
 
+def count_learnable_params(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
 def mkdir_p(path):
     try:
         os.makedirs(path)
@@ -349,3 +355,38 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+
+class DataParallelPassThrough(nn.parallel.DataParallel):
+    """
+    Use this so the following still works.
+    >>> net = SomeModule(10, 20)
+    >>> print(net.some_sub_module)
+    >>> net = DistributedDataParallelPassthrough(net)
+    >>> print(net.some_sub_module)
+    While otherwise, with `nn.parallel.DataParallel`, this would give a ModuleAttributeError.
+    https://github.com/pytorch/pytorch/issues/16885
+    """
+    def __getattr__(self, name):
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return getattr(self.module, name)
+
+
+def initialize_logging(output_dir, to_file=True):
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(message)s',
+                                  datefmt='%d-%m-%Y %H:%M:%S')
+    ch = logging.StreamHandler(stream=sys.stdout)
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    if to_file:
+        fh = logging.FileHandler(os.path.join(output_dir, 'output.log'))
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)

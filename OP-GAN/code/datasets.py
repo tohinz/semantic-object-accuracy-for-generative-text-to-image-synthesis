@@ -6,20 +6,18 @@ from __future__ import unicode_literals
 
 from nltk.tokenize import RegexpTokenizer
 from collections import defaultdict
-from miscc.config import cfg
 
-import torch
 import torch.utils.data as data
 from torch.autograd import Variable
 import torchvision.transforms as transforms
 
-import os
-import numpy as np
-from PIL import Image
 import numpy.random as random
 import pickle
 
 from miscc.utils import *
+
+logger = logging.getLogger()
+
 
 def prepare_data(data, eval=False):
     if eval:
@@ -28,16 +26,12 @@ def prepare_data(data, eval=False):
         imgs, captions, captions_lens, class_ids, keys, transformation_matrices, label = data
 
     # sort data by the length in a decreasing order
-    sorted_cap_lens, sorted_cap_indices = \
-        torch.sort(captions_lens, 0, True)
+    sorted_cap_lens, sorted_cap_indices = torch.sort(captions_lens, 0, True)
 
     real_imgs = []
     for i in range(len(imgs)):
         imgs[i] = imgs[i][sorted_cap_indices]
-        if cfg.CUDA:
-            real_imgs.append(Variable(imgs[i]).cuda().detach())
-        else:
-            real_imgs.append(Variable(imgs[i]).detach())
+        real_imgs.append(Variable(imgs[i]).to(cfg.DEVICE).detach())
 
     captions = captions[sorted_cap_indices].squeeze()
     class_ids = class_ids[sorted_cap_indices].numpy()
@@ -73,12 +67,8 @@ def get_imgs(img_path, imsize, max_objects, bbox=None, transform=None, normalize
         ret = [normalize(img)]
     else:
         for i in range(cfg.TREE.BRANCH_NUM):
-            # print(imsize[i])
-            if i < (cfg.TREE.BRANCH_NUM - 1):
-                re_img = transforms.ToPILImage()(img)
-                re_img = transforms.Resize((imsize[i], imsize[i]))(re_img)
-            else:
-                re_img = transforms.ToPILImage()(img)
+            re_img = transforms.ToPILImage()(img)
+            re_img = transforms.Resize((imsize[i], imsize[i]))(re_img)
             ret.append(normalize(re_img))
 
     return ret, bbox_scaled
@@ -172,7 +162,7 @@ class TextDataset(data.Dataset):
         with open(bbox_path, "rb") as f:
             bboxes = pickle.load(f, encoding='latin1')
             bboxes = np.array(bboxes)
-        print("Load bounding boxes: ", bboxes.shape)
+        logger.info("Load bounding boxes: %s", bboxes.shape)
         return bboxes
 
     def load_labels(self):
@@ -184,7 +174,7 @@ class TextDataset(data.Dataset):
         with open(label_path, "rb") as f:
             labels = pickle.load(f, encoding='latin1')
             labels = np.array(labels)
-        print("Load Labels: ", labels.shape)
+        logger.info("Load Labels: %s", labels.shape)
         return labels
 
     def load_captions(self, data_dir, filenames):
@@ -202,9 +192,9 @@ class TextDataset(data.Dataset):
                     # and drops everything else
                     tokenizer = RegexpTokenizer(r'\w+')
                     tokens = tokenizer.tokenize(cap.lower())
-                    # print('tokens', tokens)
+                    # logger.info('tokens: %s', tokens)
                     if len(tokens) == 0:
-                        print('cap', cap)
+                        logger.info('cap: %s', cap)
                         continue
 
                     tokens_new = []
@@ -217,7 +207,7 @@ class TextDataset(data.Dataset):
                     if cnt == self.embeddings_num:
                         break
                 if cnt < self.embeddings_num:
-                    print('ERROR: the captions for %s less than %d'
+                    logger.error('ERROR: the captions for %s less than %d'
                           % (filenames[i], cnt))
         return all_captions
 
@@ -274,7 +264,7 @@ class TextDataset(data.Dataset):
             with open(filepath, 'wb') as f:
                 pickle.dump([train_captions, test_captions,
                              ixtoword, wordtoix], f, protocol=2)
-                print('Save captions to: ', filepath)
+                logger.info('Save captions to: %s', filepath)
         else:
             with open(filepath, 'rb') as f:
                 x = pickle.load(f, encoding='latin1')
@@ -282,7 +272,7 @@ class TextDataset(data.Dataset):
                 ixtoword, wordtoix = x[2], x[3]
                 del x
                 n_words = len(ixtoword)
-                print('Load captions from: ', filepath)
+                logger.info('Load captions from: %s', filepath)
         if split == 'train':
             # a list of list: each list contains
             # the indices of words in a sentence
@@ -291,7 +281,7 @@ class TextDataset(data.Dataset):
         else:  # split=='test'
             captions = test_captions
             filenames = test_names
-        print("Captions:", len(captions))
+        logger.info("Captions: %s", len(captions))
         return filenames, captions, ixtoword, wordtoix, n_words
 
     def load_class_id(self, data_dir, total_num):
@@ -307,7 +297,7 @@ class TextDataset(data.Dataset):
         if os.path.isfile(filepath):
             with open(filepath, 'rb') as f:
                 filenames = pickle.load(f, encoding='latin1')
-            print('Load filenames from: %s (%d)' % (filepath, len(filenames)))
+            logger.info('Load filenames from: %s (%d)' % (filepath, len(filenames)))
         else:
             filenames = []
         return filenames
@@ -316,7 +306,7 @@ class TextDataset(data.Dataset):
         # a list of indices for a sentence
         sent_caption = np.asarray(self.captions[sent_ix]).astype('int64')
         if (sent_caption == 0).sum() > 0:
-            print('ERROR: do not need END (0) token', sent_caption)
+            logger.error('ERROR: do not need END (0) token', sent_caption)
         num_words = len(sent_caption)
         # pad with 0s (i.e., '<end>')
         x = np.zeros((cfg.TEXT.WORDS_NUM, 1), dtype='int64')
@@ -346,8 +336,8 @@ class TextDataset(data.Dataset):
         labels = torch.from_numpy(label)
         labels = labels.long()
         # remove -1 to enable one-hot converting
-        labels[labels < 0] = 80
-        label_one_hot = torch.FloatTensor(labels.shape[0], 81).fill_(0)
+        labels[labels < 0] = cfg.TEXT.CLASSES_NUM - 1
+        label_one_hot = torch.FloatTensor(labels.shape[0], cfg.TEXT.CLASSES_NUM).fill_(0)
         label_one_hot = label_one_hot.scatter_(1, labels, 1).float()
 
         return label_one_hot
@@ -366,7 +356,7 @@ class TextDataset(data.Dataset):
 
         img_name = '%s/%s.jpg' % (self.img_dir, key)
         imgs, bbox_scaled = get_imgs(img_name, self.imsize, self.max_objects,
-                            bbox, self.transform, normalize=self.norm)
+                                     bbox, self.transform, normalize=self.norm)
 
         transformation_matrices = self.get_transformation_matrices(bbox_scaled)
 

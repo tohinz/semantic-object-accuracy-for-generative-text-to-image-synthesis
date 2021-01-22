@@ -56,14 +56,14 @@ How to calculate the SOA scores for a model:
 
 ## Use Our Model (OP-GAN)
 #### Dependencies
-- python 3.5.2
-- pytorch 1.1.0
+- python 3.8.5
+- pytorch 1.7.1
 
 Go to ``OP-GAN``.
 Please add the project folder to PYTHONPATH and install the required dependencies:
 
 ```
-pip install -r requirements.txt
+conda env create -f environment.yml
 ```
 
 #### Data

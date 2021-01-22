@@ -1,9 +1,9 @@
 CONFIG_NAME: 'glu-gan2'
 
 DATASET_NAME: 'coco'
-DATA_DIR: '../data'
-GPU_ID: '0,1,2,3'
+DATA_DIR: 'data'
 WORKERS: 8
+DEBUG: False
 
 TREE:
     BRANCH_NUM: 3
@@ -16,7 +16,7 @@ TRAIN:
     MAX_EPOCH: 120
     DISCRIMINATOR_LR: 0.0002
     GENERATOR_LR: 0.0002
-    NET_E: '../models/coco/text_encoder100.pth'
+    NET_E: 'models/coco/text_encoder100.pth'
     BBOX_LOSS: True
     OPTIMIZE_DATA_LOADING: True
     EMPTY_CACHE: True
@@ -27,10 +27,11 @@ TRAIN:
         LAMBDA: 50.0
 
 GAN:
-    DF_DIM: 96
-    GF_DIM: 48
-    Z_DIM: 100
-    R_NUM: 3
+    DISC_FEAT_DIM: 96
+    GEN_FEAT_DIM: 48
+    GLOBAL_Z_DIM: 100
+    TEXT_CONDITION_DIM: 100
+    RESIDUAL_NUM: 3
 
 TEXT:
     EMBEDDING_DIM: 256

@@ -1,8 +1,7 @@
 CONFIG_NAME: 'attn2'
 
 DATASET_NAME: 'coco'
-DATA_DIR: '../data'
-GPU_ID: '0'
+DATA_DIR: 'data'
 WORKERS: 1
 
 TREE:
@@ -10,18 +9,19 @@ TREE:
 
 TRAIN:
     FLAG: False
-    NET_G: '../models/op-gan.pth'
+    NET_G: 'models/op-gan.pth'
     B_NET_D: False
     BATCH_SIZE: [50]
-    NET_E: '../models/coco/text_encoder100.pth'
+    NET_E: 'models/coco/text_encoder100.pth'
     OPTIMIZE_DATA_LOADING: False
     GENERATED_BBOXES: True
 
 GAN:
-    DF_DIM: 96
-    GF_DIM: 48
-    Z_DIM: 100
-    R_NUM: 3
+    DISC_FEAT_DIM: 96
+    GEN_FEAT_DIM: 48
+    GLOBAL_Z_DIM: 100
+    TEXT_CONDITION_DIM: 100
+    RESIDUAL_NUM: 3
 
 TEXT:
     EMBEDDING_DIM: 256
